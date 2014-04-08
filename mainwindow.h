@@ -46,19 +46,9 @@ class MainWindow : public QMainWindow
     QWidget *videoScreen2;
     QHBoxLayout *videoLayout1;
     QHBoxLayout *videoLayout2;
-    QMediaPlayer *videoPlayer1;
-    QMediaPlayer *videoPlayer2;
-    VlcInstance *_instance;
-    VlcMedia *_media;
-    VlcMediaPlayer *_player;
-    VlcVideoDelegate *videoWidget;
-    VlcWidgetVideo *video;
-    VlcInstance *_instance_2;
-    VlcMedia *_media_2;
-    VlcMediaPlayer *_player_2;
-    VlcVideoDelegate *videoWidget_2;
-    VlcWidgetVideo *video_2;
-    VlcVideoFrame *frame;
+//    QMediaPlayer *videoPlayer1;
+//    QMediaPlayer *videoPlayer2;
+    VideoPlayer *vplayer;
 
 public:
 
@@ -69,12 +59,39 @@ public:
     int testSomeVideo();
     int gstTest();
     void openLocal();
+//    void createSmallThermos();
+    int fillHeadTable();
     ~MainWindow();
     
 private slots:
+//    int getNextFileName();
+//    int getNextFileSameName();
     void on_pushButton_clicked();
 
     void on_action_2_triggered();
+
+    void on_playButton_clicked();
+
+    void on_stopButton_clicked();
+
+    void on_timeEdit_editingFinished();
+
+    void on_timeEdit_userTimeChanged(const QTime &time);
+
+    void on_nextTimeSegment_clicked();
+
+    void setVideoTime();
+
+    //log funcs
+
+    //config funcs
+    int createConfigFile(QString);
+    int openConfigFile(QString *);
+    int updateConfigFile(QString);
+
+
+
+    void on_action_triggered();
 
 private:
     Ui::MainWindow *ui;

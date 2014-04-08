@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-//#include "gst/gst.h"
+
+
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -33,14 +35,12 @@ MainWindow::MainWindow(QWidget *parent) :
 //    videoScreen2->setWindowFlags(  Qt::Tool |Qt::FramelessWindowHint);//add Qt::WindowStaysOnTopHint  if need on top of everything
 //    videoScreen2->show();
 //    videoScreen1->show();
+    vplayer = new VideoPlayer;
 
-    _instance = new VlcInstance(VlcCommon::args(), this);
-    _player = new VlcMediaPlayer(_instance);
-    frame = new VlcVideoFrame;
-    video = new VlcWidgetVideo(ui->widget);
-    video->setGeometry(0, 0, 380, 360);
+    vplayer->defineVideo(this,ui->widget,ui->widget_2);
+//   vplayer->_instance = new VlcInstance(VlcCommon::args(),vplayer);
+//    vplayer->_instance->setParent(this);
 
-    _player->setVideoWidget(video);
     ui->widget->setLayout(videoLayout1);
     initSlider(24);
     char videos[24];
@@ -49,41 +49,32 @@ MainWindow::MainWindow(QWidget *parent) :
     initColoredScale(videos,sizeof(videos));
 }
 
-void MainWindow::openLocal()
-{
-    QString file = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
-    if (file.isEmpty())
-        return;
-    _media = new VlcMedia(file, true, _instance);
-    video->show();
-    _player->open(_media);
-    _player->play();
-}
+
 
 void MainWindow::openAndPlayVideo()
 {
-    videoPlayer1 = new QMediaPlayer;
-    videoPlayer2 = new QMediaPlayer;
-    QVideoWidget *wVideo1 = new QVideoWidget(videoScreen1);
-    videoLayout1->addWidget(wVideo1);
-    QVideoWidget *wVideo2 = new QVideoWidget(videoScreen2);
-    videoLayout2->addWidget(wVideo2);
-    videoPlayer1->setVideoOutput(wVideo1);
-    wVideo1->setGeometry(videoLayout1->geometry());
-    wVideo1->show();
-    videoPlayer2->setVideoOutput(wVideo2);
-    wVideo2->setGeometry(videoLayout2->geometry());
-    wVideo2->show();
-     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
-     videoPlayer1->setMedia(QUrl::fromLocalFile(fileName));
-     videoPlayer2->setMedia(QUrl::fromLocalFile(fileName));
-     videoPlayer1->play();
-     videoPlayer2->play();
+//    videoPlayer1 = new QMediaPlayer;
+//    videoPlayer2 = new QMediaPlayer;
+//    QVideoWidget *wVideo1 = new QVideoWidget(videoScreen1);
+//    videoLayout1->addWidget(wVideo1);
+//    QVideoWidget *wVideo2 = new QVideoWidget(videoScreen2);
+//    videoLayout2->addWidget(wVideo2);
+//    videoPlayer1->setVideoOutput(wVideo1);
+//    wVideo1->setGeometry(videoLayout1->geometry());
+//    wVideo1->show();
+//    videoPlayer2->setVideoOutput(wVideo2);
+//    wVideo2->setGeometry(videoLayout2->geometry());
+//    wVideo2->show();
+//     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
+//     videoPlayer1->setMedia(QUrl::fromLocalFile(fileName));
+//     videoPlayer2->setMedia(QUrl::fromLocalFile(fileName));
+//     videoPlayer1->play();
+//     videoPlayer2->play();
 }
 
 int MainWindow::initSlider(int topVal)
 {
-;
+
     return 0;
 }
 int MainWindow::initColoredScale(char *existingVideos, int length)
@@ -117,5 +108,110 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_action_2_triggered()
 {
-    openLocal();
+   QString file = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
+   int result = vplayer->openLocal(file);
+   if(!result)
+        connect(vplayer->_player,SIGNAL(timeChanged(int)),this,SLOT(setVideoTime()));
+
+}
+
+void MainWindow::on_playButton_clicked()
+{
+    vplayer->pause();
+}
+
+void MainWindow::on_stopButton_clicked()
+{
+    vplayer->stop();
+}
+
+
+void MainWindow::on_timeEdit_editingFinished()
+{
+
+      QTime zerotime;
+      zerotime.setHMS(0,0,0,0);
+      vplayer->moveToTime(zerotime.secsTo(ui->timeEdit->time())*1000);
+
+}
+
+void MainWindow::on_timeEdit_userTimeChanged(const QTime &time)
+{
+//    QTime zerotime;
+//    zerotime.setHMS(0,0,0,0);
+//    int tmp = zerotime.secsTo(ui->timeEdit->time());
+//    qDebug() << tmp;
+}
+
+void MainWindow::on_nextTimeSegment_clicked()
+{
+
+}
+
+int MainWindow::fillHeadTable()
+{
+    return 0;
+}
+
+void MainWindow::setVideoTime()
+{
+
+    int time = vplayer->getCurrentTime();
+    int ms = time%1000;
+    time = time/1000;
+    QTime outtime;
+    int h = time/3600;
+    int m = (time/60)%60;
+    int s = time%60;
+
+    outtime.setHMS(h,m,s,ms);
+    ui->timeEdit->setTime(outtime);
+
+}
+
+int MainWindow::createConfigFile(QString path)
+{
+    if (path.isEmpty())
+        return 1;
+    QString currentdir = QApplication::applicationDirPath()+"/config";
+    qDebug() << currentdir;
+    qDebug() << path;
+    if(QFile(currentdir).exists())//if file is not empty removing it, same is update func
+        QFile(currentdir).remove();
+    QFile *newconf = new QFile(currentdir);
+    newconf->open(QIODevice::ReadWrite);
+    newconf->write(path.toLocal8Bit());
+    newconf->close();
+    return 0;
+}
+
+int MainWindow::openConfigFile(QString *retstr)
+{
+
+    retstr->clear();
+    QString currentdir = QApplication::applicationDirPath()+"/config";
+    QFile *conf = new QFile;
+    conf->setFileName(currentdir);
+    if(conf->open(QIODevice::ReadWrite))
+    {
+        retstr->append(conf->readAll());
+        qDebug() << retstr;
+        return 0;
+    }
+    else
+        return 1;
+}
+
+int MainWindow::updateConfigFile(QString path)
+{
+
+}
+
+void MainWindow::on_action_triggered()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Select dir"),QDir::homePath());
+    QString readDir;
+//    if(!openConfigFile(&readDir))
+        createConfigFile(dir);
+    qDebug() << readDir;
 }
