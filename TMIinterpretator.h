@@ -63,7 +63,7 @@ private:
     enum eventType{ErrorLog=0, UserMessage=1, SystemMessage=2, endOfEventType=3};
     enum eventCode{Code1=0, Code2=1, Code3=2, Code4=3, endOfEventCode=4};
 
-//#pragma pack (push,1)
+#pragma pack (push,1)
   struct TInterpItem_t
     {
         char level ;
@@ -76,7 +76,7 @@ private:
         long defaultVal ;
         long typ;
   } __attribute__ ((packed)) ;
-// #pragma pack (pop)
+ #pragma pack (pop)
     TInterpItem_t TInterpItem;
     TInterpItem_t setupMenu[7];
 //#pragma pack (push,1)
