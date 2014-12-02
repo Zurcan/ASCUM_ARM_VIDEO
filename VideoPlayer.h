@@ -11,7 +11,7 @@
 #include <vlc-qt/VideoFrame.h>
 #include <vlc-qt/WidgetSeek.h>
 #include <vlc-qt/MediaList.h>
-
+#include <vlc-qt/Video.h>
 namespace video {
 class VideoPlayer;
 }
@@ -34,8 +34,8 @@ public:
 
     VlcMediaPlayer *_player;
 //    VlcMediaPlayer *_player_2;
-
-
+     VlcMedia *_media;
+    VlcVideo *someVideo;
 //    explicit VideoPlayer(QWidget *parent = 0);
     void defineVideo(QObject *, QWidget *);
     int openLocal(QString);
@@ -47,6 +47,9 @@ public:
     int getVideoLength();
     float getPosition();
     int setPlayerPosition(float pos);
+
+    QSize getVideoSize();
+    QRect getGeometry();
     QString getCurrentMediaLocation();
     ~VideoPlayer();
 
@@ -56,7 +59,7 @@ private:
 //    VlcWidgetVideo *video_2;
     VlcInstance *_instance;
 //    VlcInstance *_instance_2;
-    VlcMedia *_media;
+
 //    VlcMedia *_media_2;
     bool ispaused;
 

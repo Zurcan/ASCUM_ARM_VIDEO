@@ -1,4 +1,0 @@
-#ifndef LOGCOMBINER_H
-#define LOGCOMBINER_H
-
-#endif // LOGCOMBINER_H

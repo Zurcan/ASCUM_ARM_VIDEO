@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>969</width>
-    <height>821</height>
+    <width>1082</width>
+    <height>851</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,25 +15,66 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
-     <widget class="QLineEdit" name="lineEdit"/>
-    </item>
-    <item row="2" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_5"/>
-    </item>
     <item row="4" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_7">
       <property name="sizeConstraint">
        <enum>QLayout::SetFixedSize</enum>
       </property>
       <item>
-       <widget class="QDateEdit" name="dateEdit"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>TextLabel</string>
+       <widget class="QTableWidget" name="tableWidget_3">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>126</height>
+         </size>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="rowCount">
+         <number>4</number>
+        </property>
+        <property name="columnCount">
+         <number>1</number>
+        </property>
+        <row>
+         <property name="text">
+          <string>Суммарный размер папки, мб</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Продолжительность видео</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Общее количество видеофайлов</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Общее количество логфайлов</string>
+         </property>
+        </row>
+        <column/>
+        <item row="1" column="0">
+         <property name="text">
+          <string/>
+         </property>
+        </item>
        </widget>
       </item>
       <item>
@@ -143,6 +184,9 @@
       </item>
      </layout>
     </item>
+    <item row="2" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_5"/>
+    </item>
     <item row="5" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
@@ -171,34 +215,15 @@
           </item>
           <item>
            <widget class="QComboBox" name="comboBox">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
             <item>
              <property name="text">
               <string>Нет</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид вперед</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид назад</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид на сцепку</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид на пульт 1</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид на пульт 2</string>
              </property>
             </item>
            </widget>
@@ -667,34 +692,15 @@
           </item>
           <item>
            <widget class="QComboBox" name="comboBox_2">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
             <item>
              <property name="text">
               <string>Нет</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид вперед</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид назад</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид на сцепку</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид на пульт 1</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Вид на пульт 2</string>
              </property>
             </item>
            </widget>
@@ -1133,7 +1139,20 @@
       </item>
      </layout>
     </item>
-    <item row="6" column="0">
+    <item row="14" column="0">
+     <layout class="QGridLayout" name="gridLayout_2"/>
+    </item>
+    <item row="15" column="0">
+     <widget class="QProgressBar" name="progressBar">
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="0" rowspan="3">
+     <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+    </item>
+    <item row="10" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
        <widget class="QPushButton" name="previousTimeSegment">
@@ -1194,6 +1213,9 @@
       </item>
       <item>
        <widget class="QTimeEdit" name="timeEdit">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="minimumSize">
          <size>
           <width>71</width>
@@ -1261,47 +1283,49 @@
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <property name="spacing">
          <number>0</number>
         </property>
         <item>
+         <widget class="QwtScaleWidget" name="ScaleWidget"/>
+        </item>
+        <item>
          <widget class="QTableWidget" name="tableWidget">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
-            <width>360</width>
-            <height>8</height>
+            <width>600</width>
+            <height>15</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>360</width>
-            <height>8</height>
+            <width>60000</width>
+            <height>15</height>
            </size>
           </property>
           <property name="font">
            <font>
             <pointsize>7</pointsize>
            </font>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="lineWidth">
+           <number>-1</number>
+          </property>
+          <property name="midLineWidth">
+           <number>-1</number>
           </property>
           <property name="verticalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
@@ -1315,26 +1339,35 @@
           <property name="autoScrollMargin">
            <number>0</number>
           </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectColumns</enum>
+          </property>
+          <property name="showGrid">
+           <bool>false</bool>
+          </property>
           <property name="rowCount">
            <number>1</number>
           </property>
           <property name="columnCount">
-           <number>24</number>
+           <number>0</number>
           </property>
           <attribute name="horizontalHeaderVisible">
            <bool>false</bool>
           </attribute>
           <attribute name="horizontalHeaderCascadingSectionResizes">
-           <bool>false</bool>
+           <bool>true</bool>
           </attribute>
           <attribute name="horizontalHeaderDefaultSectionSize">
-           <number>15</number>
+           <number>100</number>
           </attribute>
           <attribute name="horizontalHeaderHighlightSections">
            <bool>true</bool>
           </attribute>
           <attribute name="horizontalHeaderMinimumSectionSize">
-           <number>15</number>
+           <number>10</number>
           </attribute>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
@@ -1349,90 +1382,23 @@
            <number>10</number>
           </attribute>
           <row/>
-          <column>
-           <property name="text">
-            <string>0</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>2</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>3</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>4</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Новый столбец</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>5</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>6</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>7</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>8</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>9</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>10</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>12</string>
-           </property>
-          </column>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
          </widget>
         </item>
         <item>
          <widget class="QSlider" name="horizontalSlider">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
           <property name="maximumSize">
            <size>
-            <width>360</width>
-            <height>10</height>
+            <width>60000</width>
+            <height>25</height>
            </size>
           </property>
           <property name="maximum">
@@ -1459,35 +1425,51 @@
       </item>
      </layout>
     </item>
-    <item row="7" column="0" rowspan="3">
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <item>
-       <widget class="QwtThermo" name="Thermo">
-        <property name="scalePosition">
-         <enum>QwtThermo::NoScale</enum>
-        </property>
-        <property name="pipeWidth">
-         <number>25</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QwtThermo" name="Thermo_2">
-        <property name="scalePosition">
-         <enum>QwtThermo::NoScale</enum>
-        </property>
-        <property name="pipeWidth">
-         <number>25</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <item row="7" column="0">
+     <widget class="Line" name="line_2">
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
     </item>
-    <item row="10" column="0">
-     <layout class="QGridLayout" name="gridLayout_2"/>
+    <item row="8" column="0">
+     <widget class="Line" name="line_3">
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
     </item>
-    <item row="0" column="0">
-     <widget class="QLineEdit" name="lineEdit_2"/>
+    <item row="9" column="0">
+     <widget class="Line" name="line_4">
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="Line" name="line">
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="midLineWidth">
+       <number>0</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -1496,7 +1478,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>969</width>
+     <width>1082</width>
      <height>21</height>
     </rect>
    </property>
@@ -1544,9 +1526,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QwtThermo</class>
+   <class>QwtScaleWidget</class>
    <extends>QWidget</extends>
-   <header>qwt_thermo.h</header>
+   <header>qwt_scale_widget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

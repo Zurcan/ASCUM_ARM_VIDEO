@@ -4,12 +4,12 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml script
-QT       += multimedia multimediawidgets
+QT       += core gui #xml script
+QT       += multimedia #multimediawidgets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 {
  QT += widgets
-QT += widgets printsupport
+#QT += widgets printsupport
 DEFINES += HAVE_QT5
 }
 
@@ -23,8 +23,8 @@ SOURCES += main.cpp\
     ../../ASCUM_ARM/LOG_PROCESSOR/logprocessor.cpp\
     TMIinterpretator.cpp \
     VideoPlayer.cpp \
-    LogCombiner.cpp \
-    msgSys.cpp
+    msgSys.cpp \
+    ../../flyingFrame/FlyingFrame.cpp
 #    player.cpp
 
 HEADERS  += mainwindow.h \
@@ -32,10 +32,10 @@ HEADERS  += mainwindow.h \
     ../../ASCUM_ARM/LOG_PROCESSOR/logprocessor.h\
     TMIinterpretator.h \
     VideoPlayer.h \
-    LogCombiner.h \
     msgSys.h \
     ints.h \
-    ../../ASCUM_ARM/_SHARED_LIBRARIES/log.segments.h
+    ../../ASCUM_ARM/_SHARED_LIBRARIES/log.segments.h \
+    ../../flyingFrame/FlyingFrame.h
 #    player.h
 #CONFIG += link_pkgconfig
 #    PKGCONFIG += gstreamer-0.10
@@ -75,4 +75,4 @@ INCLUDEPATH+= C:\Qt\mingw-4.7\i686-w64-mingw32\include   #инклудим вс�
 LIBS     += -LC:\Qt\vlc-qt_release\lib -lvlc-qt -lvlc-qt-widgets
 INCLUDEPATH += C:\Qt\vlc-qt_release\include
 INCLUDEPATH += C:\Qt\vlc-qt_release\bin
-INCLUDEPATH += "C:\Program Files\VideoLAN\VLC"
+INCLUDEPATH += C:\Program Files\VideoLAN\VLC
