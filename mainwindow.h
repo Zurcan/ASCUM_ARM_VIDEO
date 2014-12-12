@@ -353,7 +353,9 @@ private:
     QVector <float> columnWidthes;                //relative to total time length column width
     QVector <int> pageVector;                     //consists of ints each of it means what pageIndex is in current cell
     QVector <int> pageFlagVector;                 //consists of ints each of it means what behaviour should be at current cell processing 0 - play video 1 - show parameters 2 - ok do nothing 3 - error do nothing
+    QVector <int> pageEndTimes;                 //contains start times of each cell
     QVector <QWidget> coloredBars;
+
 //    FlyingFrame *myFrame;
 //    MyThread *thrd;
     struct dataPage
@@ -370,6 +372,18 @@ private:
         QVector <int> camTimeOffsets;
     };
 
+    struct tableCell
+    {
+        time_t beginTime;
+        time_t endTime;
+        int cellType;
+        float relativeWidth;
+        int currentPage;
+        int colWidth;
+        int donor;              //0=not donor not acceptor, 1 = donor, 2 = acceptor;
+
+    };
+    QVector <tableCell> timeCells;
     QVector <dataPage> dataMap;
 //    int dataMapCurrentIndex;
 
@@ -380,7 +394,7 @@ private:
     int readTimeEdges(time_t *beginTime, time_t *endTime/*, unsigned char *beginTimeFract, unsigned char *endTimeFract*/);                  // getting starting and ending times of the log to create one global tim axis
     int checkTimePointExistance(time_t);                                    // check if point with time value from global time axis is enabled
     int updateThermos(dataParams dp);
-    int createFakeTimeScale();                                              // here is matching of timeSegment on qslider taking place
+    int createFakeTimeScale(int mode);                                              // here is matching of timeSegment on qslider taking place
     bool checkFileHeaderCRC(QString filename);
     bool createTimeSegment(QStringList *listOfLogs);                        //here is creating of timeSegment vector
     bool checkfunc(time_t *, time_t *);
@@ -421,6 +435,7 @@ private:
     int openLogConfigFile(QString *);
     int openVideoConfigFile(QString *);
     int updateConfigFile(QString);
+    void moveToAnotherTimeSegment(int);
 private slots:
 //    int getNextFileName();
 //    int getNextFileSameName();
@@ -457,6 +472,7 @@ private slots:
     int readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, unsigned char *beginTimeFract, unsigned char *endTimeFract,int globalIterator);
     void on_nextTimeSegment_clicked();
     void getTimeTimerTick();
+    void createCellVector();            // creating table widget cell begin and end times X=begin Y=end
 
 #ifdef GLOBALMODE
     void setVideoTime();

@@ -586,195 +586,185 @@ int MainWindow::initSlider(int topVal)
 int MainWindow::initColoredScale()
 {
     int length = dataMap.size();
-//    QPalette *tmppal = new QPalette(Qt::green,Qt::green,Qt::green,Qt::green,Qt::green,Qt::green,Qt::white);
-
-//    ui->tableWidget->setPalette(QPalette(Qt::green,Qt::green,Qt::green,Qt::green,Qt::green,Qt::green,Qt::white));
     int totalWidth = dataMap[dataMap.size()-1].timeEdge2 - dataMap[0].timeEdge1;\
     qDebug() << "width of " << totalWidth;
     qDebug() << "width of tablewidget"<< ui->tableWidget->width();
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableWidget->setEnabled(true);
+    ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    for(int a = 0; a< timeCells.size(); a++)
+    {
+        ui->tableWidget->insertColumn(a);
+        qDebug() << "column number" << a << " inserted in tablewidget";
+//        QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
+        ui->tableWidget->setItem(0,a, new QTableWidgetItem);
+        ui->tableWidget->item(0,a)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        ui->tableWidget->item(0,a)->setToolTip((QDateTime::fromTime_t(timeCells[a].beginTime).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(timeCells[a].endTime).toUTC().time()).toString());
+        ui->tableWidget->setColumnWidth(a,timeCells[a].colWidth);
+        switch(timeCells[a].cellType)
+        {
+            case 0:
+                {
+                  ui->tableWidget->item(0,a)->setBackground(Qt::green);
+                  break;
+                }
+            case 1:
+                {
+                  ui->tableWidget->item(0,a)->setBackground(Qt::gray);
+                  break;
+                }
+            case 2:
+                {
+                  ui->tableWidget->item(0,a)->setBackground(Qt::white);
+                  break;
+                }
+            case 3:
+                {
+                  ui->tableWidget->item(0,a)->setBackground(Qt::red);
+                  break;
+                }
+            default:
+                break;
+        }
+
+    }
     if(length!=0)
     {
-        ui->tableWidget->setEnabled(true);
-        ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
-
-//        ui->tableWidget->setColumnCount(length);
-//        ui->tableWidget->horizontalHeader()->set
-     //   ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-        int k = 0,tmpGreenLength=0, tmpGrayLength=0, tmpWhiteLength=0,tmpTimeCell=0;
-
-//        pageFlagVector.append(0);
-      //   ui->tableWidget->setColumnCount(1);
-        qDebug() << "number of green bars on the tablewidget" << length;
-        pageVector.clear();
-        pageFlagVector.clear();
-        for(int i = 0; i < length; i++)
-        {
-            qDebug() << "cycle number" << i;
-
-            int colorcounter=0;
-
-//            while(Iter.hasNext())
+//        ui->tableWidget->setEnabled(true);
+//        ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+//        int k = 0,tmpGreenLength=0, tmpGrayLength=0, tmpWhiteLength=0,tmpTimeCell=0;
+//        qDebug() << "number of green bars on the tablewidget" << length;
+//        pageVector.clear();
+//        pageFlagVector.clear();
+//        for(int i = 0; i < length; i++)
+//        {
+//            qDebug() << "cycle number" << i;
+//            int colorcounter=0;
+//            int tmpMax = 0;
+//            for(int a = 0; a < dataMap[i].videoTimeEdges.size();a++)
 //            {
-//                if(Iter.value())
-//                    colorcounter++;
-//                Iter.next();
-////                qDebug() << "somecount";
+//                int tmpTime = dataMap[i].videoTimeEdges[a]+dataMap[i].camTimeOffsets[a]/1000;
+//                if(tmpMax < tmpTime)
+//                    tmpMax = tmpTime;
 //            }
-//            if(colorcounter*2>=dataMap[i].videoVector.size())
-//                 ui->tableWidget->item(0,i)->setBackground(Qt::green);
+//            tmpGreenLength = tmpMax;
+//            tmpGrayLength = dataMap[i].logTimeEdge2-dataMap[i].timeEdge1;
+//            tmpTimeCell = dataMap[i].timeEdge2-dataMap[i].timeEdge1;
+//            if(tmpGreenLength>tmpGrayLength)
+//            {
+//                tmpGrayLength= 0;
+//                if(tmpTimeCell>tmpGreenLength)
+//                   tmpWhiteLength  =  tmpTimeCell - tmpGreenLength;
+//            }
 //            else
-//                ui->tableWidget->item(0,i)->setBackground(Qt::gray);
-            int tmpMax = 0;
-            for(int a = 0; a < dataMap[i].videoTimeEdges.size();a++)
-            {
-                int tmpTime = dataMap[i].videoTimeEdges[a]+dataMap[i].camTimeOffsets[a]/1000;
-                if(tmpMax < tmpTime)
-                    tmpMax = tmpTime;
-            }
-            tmpGreenLength = tmpMax;
-//            if(tmpGreenLength==1)
-//                tmpGreenLength = dataMap[i].logTimeEdge2
-            tmpGrayLength = dataMap[i].logTimeEdge2-dataMap[i].timeEdge1;
-            tmpTimeCell = dataMap[i].timeEdge2-dataMap[i].timeEdge1;
-
-            if(tmpGreenLength>tmpGrayLength)
-            {
-                tmpGrayLength= 0;
-                if(tmpTimeCell>tmpGreenLength)
-                   tmpWhiteLength  =  tmpTimeCell - tmpGreenLength;
-//                tmpWhiteLength = 0;
-            }
-            else
-            {
-               tmpGrayLength = tmpGrayLength-tmpGreenLength;
-               if(tmpTimeCell>tmpGreenLength+tmpGrayLength)
-                   tmpWhiteLength = tmpTimeCell - (tmpGreenLength+tmpGrayLength);
-            }
-            bool redFlag = true;
-            for(int b = 0; b < dataMap[i].camTimeOffsets.size(); b++)
-            {
-                qDebug() << dataMap[i].videoTimeEdges.at(b);
-                if((dataMap[i].camTimeOffsets.at(b)>0)&(dataMap[i].videoTimeEdges.at(b)>0))
-                    redFlag = false;
-                else if((dataMap[i].camTimeOffsets.at(b)==0)&(dataMap[i].videoTimeEdges.at(b)==0))
-                    redFlag = false;
-                else
-                {
-                    redFlag = true;
-                    b = dataMap[i].camTimeOffsets.size();
-                    qDebug() << "redflag appears";
-                }
-//                    else if((dataMap[i].camTimeOffsets.at(b)==0)&(dataMap[i].videoTimeEdges.at(b)==0))
-//                         redFlag = false;
-
-            }
-
-         //   tmpGrayLength =
-//            ui->tableWidget->item(0,i)->setText((QDateTime::fromTime_t(dataMap[i].timeEdge1).toUTC().time()).toString());
-            if(tmpGreenLength>0)
-            {
-
-
-//                if(tmpGreenLength==0)
+//            {
+//               tmpGrayLength = tmpGrayLength-tmpGreenLength;
+//               if(tmpTimeCell>tmpGreenLength+tmpGrayLength)
+//                   tmpWhiteLength = tmpTimeCell - (tmpGreenLength+tmpGrayLength);
+//            }
+//            bool redFlag = true;
+//            for(int b = 0; b < dataMap[i].camTimeOffsets.size(); b++)
+//            {
+//                qDebug() << dataMap[i].videoTimeEdges.at(b);
+//                if((dataMap[i].camTimeOffsets.at(b)>0)&(dataMap[i].videoTimeEdges.at(b)>0))
+//                    redFlag = false;
+//                else if((dataMap[i].camTimeOffsets.at(b)==0)&(dataMap[i].videoTimeEdges.at(b)==0))
+//                    redFlag = false;
+//                else
 //                {
-//                    tmpGreenLength = dataMap[i].timeEdge2 - dataMap[i].timeEdge1;
+//                    redFlag = true;
+//                    b = dataMap[i].camTimeOffsets.size();
+//                    qDebug() << "redflag appears";
 //                }
-//                int notZeroOffCounter=0,notZeroVideos
 
-//                if(k>0)
-                pageVector.append(i);
-                ui->tableWidget->insertColumn(k);
-                qDebug() << "column number" << k << " inserted in tablewidget";
-    //            if(i>0)
-    //                ui->tableWidget->setColumnCount(k);
-                QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
-    //            Iter.toBack();
-                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
-                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength).toUTC().time()).toString());
-                float tmplength = (float)tmpGreenLength/totalWidth;
-                qDebug() << "tmplength" << tmplength;
-                columnWidthes.append(tmplength);
-                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*((float)tmpGreenLength/totalWidth));
-                if(redFlag)
-                {
-                    ui->tableWidget->item(0,k)->setBackground(Qt::red);
-                    pageFlagVector.append(3);
-                }
-                else
-                {
-                    ui->tableWidget->item(0,k)->setBackground(Qt::green);
-                    pageFlagVector.append(0);
-                }
-                qDebug() << "green length exists" << tmpGreenLength;
-                qDebug() << ui->tableWidget->columnWidth(k);
-                k++;
+//            }
+//            if(tmpGreenLength>0)
+//            {
+//                pageVector.append(i);
+//                ui->tableWidget->insertColumn(k);
+//                qDebug() << "column number" << k << " inserted in tablewidget";
+//                QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
+//                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
+//                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength).toUTC().time()).toString());
+//                float tmplength = (float)tmpGreenLength/totalWidth;
+//                qDebug() << "tmplength" << tmplength;
+//                columnWidthes.append(tmplength);
+//                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*((float)tmpGreenLength/totalWidth));
+//                pageEndTimes.append(dataMap[i].timeEdge1+tmpGreenLength);
+//                if(redFlag)
+//                {
+//                    ui->tableWidget->item(0,k)->setBackground(Qt::red);
+//                    pageFlagVector.append(3);
+//                }
+//                else
+//                {
+//                    ui->tableWidget->item(0,k)->setBackground(Qt::green);
+//                    pageFlagVector.append(0);
+//                }
+//                qDebug() << "green length exists" << tmpGreenLength;
+//                qDebug() << ui->tableWidget->columnWidth(k);
+//                k++;
 
-            }
-            if(tmpGrayLength!=0)
-            {
-                float tmplength = (float)tmpGrayLength/totalWidth;
-                qDebug() << "tmplength" << tmplength;
-                columnWidthes.append(tmplength);
-                int tmpwidth = ui->tableWidget->width()*((float)tmpGrayLength/totalWidth);
-                if(tmpwidth<1)
-                    tmpwidth=1;
-//                ui->tableWidget->setColumnCount(k);
+//            }
+//            if(tmpGrayLength!=0)
+//            {
+//                float tmplength = (float)tmpGrayLength/totalWidth;
+//                qDebug() << "tmplength" << tmplength;
+//                columnWidthes.append(tmplength);
+//                int tmpwidth = ui->tableWidget->width()*((float)tmpGrayLength/totalWidth);
+//                ui->tableWidget->insertColumn(k);
+//                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
+//                qDebug() << "column number" << k << " inserted in tablewidget";
+//                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//                qDebug() << "gray length exists"<<tmpGrayLength;
+//                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength).toUTC().time()).toString());
+//                ui->tableWidget->setColumnWidth(k,tmpwidth);
+//                 if(redFlag)
+//                 {
+//                     ui->tableWidget->item(0,k)->setBackground(Qt::red);
+//                     pageFlagVector.append(3);
+//                 }
+//                 else
+//                 {
+//                     ui->tableWidget->item(0,k)->setBackground(Qt::gray);
+//                     pageFlagVector.append(1);
+//                 }
+//                 pageEndTimes.append(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength);
+//                 qDebug() << ui->tableWidget->columnWidth(k);
+//                 pageVector.append(i);
+//                 k++;
 
-                    ui->tableWidget->insertColumn(k);
-                 ui->tableWidget->setItem(0,k, new QTableWidgetItem);
-                qDebug() << "column number" << k << " inserted in tablewidget";
-                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-                qDebug() << "gray length exists"<<tmpGrayLength;
-                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength).toUTC().time()).toString());
-//                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*(tmpTimeCell - tmpGrayLength)/totalWidth);
-                 ui->tableWidget->setColumnWidth(k,tmpwidth);
-                 if(redFlag)
-                 {
-                     ui->tableWidget->item(0,k)->setBackground(Qt::red);
-                     pageFlagVector.append(3);
-                 }
-                 else
-                 {
-                     ui->tableWidget->item(0,k)->setBackground(Qt::gray);
-                     pageFlagVector.append(1);
-                 }
-                 qDebug() << ui->tableWidget->columnWidth(k);
-                 pageVector.append(i);
-//                 pageFlagVector.append(1);
-                k++;
+//            }
+//            if(tmpWhiteLength!=0)
+//            {
+//                float tmplength = (float)tmpWhiteLength/totalWidth;
+//                qDebug() << "tmplength" << tmplength;
+//                columnWidthes.append(tmplength);
+//                qDebug() << "white length exists"<< tmpTimeCell - tmpGreenLength-tmpGrayLength;
+//                ui->tableWidget->insertColumn(k);
+//                qDebug() << "column number" << k << " inserted in tablewidget";
+//                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
+//                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength+tmpWhiteLength).toUTC().time()).toString());
+//                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*(float)tmpWhiteLength/totalWidth);
+//                if(redFlag)
+//                {
+//                    ui->tableWidget->item(0,k)->setBackground(Qt::red);
+//                    pageFlagVector.append(3);
+//                }
+//                else
+//                {
+//                    ui->tableWidget->item(0,k)->setBackground(Qt::white);
+//                    pageFlagVector.append(2);
+//                }
+//                 pageVector.append(i);
+//                pageEndTimes.append(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength+tmpWhiteLength);
+//                k++;
 
-            }
-            if(tmpWhiteLength!=0)
-            {
-                float tmplength = (float)tmpWhiteLength/totalWidth;
-                qDebug() << "tmplength" << tmplength;
-                columnWidthes.append(tmplength);
-                qDebug() << "white length exists"<< tmpTimeCell - tmpGreenLength-tmpGrayLength;
-                ui->tableWidget->insertColumn(k);
-                qDebug() << "column number" << k << " inserted in tablewidget";
-                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
-                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength+tmpWhiteLength).toUTC().time()).toString());
-                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*(float)tmpWhiteLength/totalWidth);
-                if(redFlag)
-                {
-                    ui->tableWidget->item(0,k)->setBackground(Qt::red);
-                    pageFlagVector.append(3);
-                }
-                else
-                {
-                    ui->tableWidget->item(0,k)->setBackground(Qt::white);
-                    pageFlagVector.append(2);
-                }
-                 pageVector.append(i);
-
-                k++;
-
-            }
-            qDebug() << "circle finished";
-        }
+//            }
+//            qDebug() << "circle finished";
+//        }
         QFont font;
         font.setStyleName("Courier");
         font.setBold(true);
@@ -789,8 +779,6 @@ int MainWindow::initColoredScale()
             vals[i] = dataMap[0].timeEdge1+i/**step*/;
         }
         vals[tmpTotalTime-1] = dataMap[dataMap.size()-1].timeEdge2;
-//        QList <double> dl;
-
         QList<double> ticks[QwtScaleDiv::NTickTypes];
         QList<double> &majorTicks = ticks[QwtScaleDiv::MajorTick];
         QList<double> &minorTicks = ticks[QwtScaleDiv::MinorTick];
@@ -817,21 +805,6 @@ int MainWindow::initColoredScale()
         if(minorTicks.at(minorTicks.size()-1)<majorTicks.at(majorTicks.size()-2))
             majorTicks.removeAt(majorTicks.size()-2);
         qDebug() << "Quit Creating Time Scale";
-//        for (int i = 0; i < timeScaleTickCounter ; i++)
-//        {
-//            if (i % 2 == 0)
-//            {
-//                majorTicks.append(i);
-//            }
-//            else
-//            {
-//                minorTicks.append(i);
-//            }
-//        }
-//        for(int i = 0; i< 25; i++)
-//        {
-//            dl.append((double)vals[i]);
-//        }
         QwtScaleDiv mTimeScaleDiv = QwtScaleDiv(majorTicks.first(), majorTicks.last(), ticks);
         mapTimeScale = new MapTimeScaleDraw("hh:mm:ss");
         mapTimeScale->setTimeArr(vals,tmpTotalTime);
@@ -840,16 +813,13 @@ int MainWindow::initColoredScale()
         ui->ScaleWidget->setContentsMargins(0,0,-43,0);//leveling scale labels alignment balance
         QwtScaleTransformation *tr= new QwtScaleTransformation(QwtScaleTransformation::Linear);
         ui->ScaleWidget->setScaleDiv(tr,mTimeScaleDiv);
-
-        //ui->tableWidget->removeColumn(ui->tableWidget->columnCount()-1);
     }
     else return 1;
     ui->tableWidget->selectColumn(0);
-
-    //myFrame->drawSecondPolygon(ui->tableWidget,true);
-    //myFrame->update();
     for(int a =0 ; a < pageFlagVector.size(); a++)
-        qDebug() << "pageFlagVectors :" << pageFlagVector.at(a);
+    {
+        qDebug() << "pageFlagVector :" << pageFlagVector.at(a) <<"pageVector" << pageVector.at(a)<<"pageEndTimes"<<pageEndTimes.at(a);
+    }
     return 0;
 }
 
@@ -1242,39 +1212,93 @@ bool MainWindow::createTimeSegment(QStringList *listOfLogs)
     return success;
 }
 
-int MainWindow::createFakeTimeScale()
+int MainWindow::createFakeTimeScale(int mode)
 {
     ////qDebug()() << "creatinFakeTimeScale";
+//    timer->stop();
+    if(mode!=0)
+    {
+        vplayer->stop();
+        vplayer2->stop();
+    }
+    mythread->exit();
+//    thread()->exit();
     ui->horizontalSlider->setValue(0);
     ui->horizontalSlider->setMaximum(0);
     int sliderScaleVal = 0;
-    sliderScaleVal = dataMap[pageIndex].timeEdge2 - dataMap[pageIndex].timeEdge1;
-//    if(!videoOnly)
-//    {
-//        sliderScaleVal = (int)timeSegment.at(timeSegmentIterator*2+1)-(int)timeSegment.at(timeSegmentIterator*2);
-//        //qDebug() << "left" << (int)timeSegment.at(timeSegmentIterator*2);
-//        //qDebug() << "right" << (int)timeSegment.at(timeSegmentIterator*2+1);
-//        //qDebug() <<"sliderscaleval" <<    sliderScaleVal;
-//        //qDebug() << "timeSegment" << timeSegment;
-//        if(sliderScaleVal<0)
-//        {
-//            sliderScaleVal = (int)timeSegment.at(timeSegmentIterator*2)-(int)timeSegment.at(timeSegmentIterator*2+1);
-//            inverseTime = true;
-//        }
-//    }
-//    else
-//    {
-//        sliderScaleVal = vplayer->getVideoLength();
-//        //qDebug() << "sliderScaleVal"<<sliderScaleVal;
-//    }
-        ui->horizontalSlider->setMaximum(sliderScaleVal);
-        //qDebug() << "sliderscaleval at createFakeTimeScale" << sliderScaleVal;
-        int sliderPageCount = 100;
-        if (sliderScaleVal < sliderPageCount)
-            sliderPageCount = sliderScaleVal;
-        ui->horizontalSlider->setPageStep(sliderScaleVal/sliderPageCount);
 
-        qDebug() << sliderScaleVal;
+    for(int i =0; i < timeCells.size(); i++)
+    {
+        qDebug() << "current page"<<timeCells[i].currentPage;
+        qDebug() << "cell type"<<timeCells[i].cellType;
+        qDebug() << "begin time"<<timeCells[i].beginTime;
+        qDebug() << "end time"<<timeCells[i].endTime;
+    }
+//    qDebug() << ui->tableWidget->currentColumn() << ui->tableWidget->columnCount()<<pageIndex;
+
+    qDebug() << "entering createfaketimescale function" << mode << pageEndTimes.at(ui->tableWidget->currentColumn());
+    switch(mode)
+    {
+        case 0:
+                {
+                    sliderScaleVal = timeCells[ui->tableWidget->currentColumn()].endTime- timeCells[ui->tableWidget->currentColumn()].beginTime;
+//                    videoOnly = false;
+                    break;
+                }
+//        case 1:
+//                {
+//                    if((ui->tableWidget->currentColumn()-1)>=0)
+//                    {
+//                        if(pageVector.at(ui->tableWidget->currentColumn()-1)==pageVector.at(ui->tableWidget->currentColumn()))
+//                        {
+//                           sliderScaleVal = pageEndTimes.at(ui->tableWidget->currentColumn()) - pageEndTimes.at(ui->tableWidget->currentColumn()-1);
+//                        }
+//                        else
+//                            sliderScaleVal = pageEndTimes.at(ui->tableWidget->currentColumn()) - dataMap[pageIndex].timeEdge1;
+//                    }
+//                    else
+//                        sliderScaleVal = pageEndTimes.at(ui->tableWidget->currentColumn()) - dataMap[pageIndex].timeEdge1;
+//                    break;
+
+//                }
+//        case 2:
+//                {
+//                    if((ui->tableWidget->currentColumn()-1)>=0)
+//                    {
+//                        if(pageVector.at(ui->tableWidget->currentColumn()-1)==pageVector.at(ui->tableWidget->currentColumn()))
+//                        {
+//                           sliderScaleVal = pageEndTimes.at(ui->tableWidget->currentColumn()) - pageEndTimes.at(ui->tableWidget->currentColumn()-1);
+//                        }
+//                        else
+//                            sliderScaleVal = pageEndTimes.at(ui->tableWidget->currentColumn()) - dataMap[pageIndex].timeEdge1;
+//                    }
+//                    else
+//                        sliderScaleVal = pageEndTimes.at(ui->tableWidget->currentColumn()) - dataMap[pageIndex].timeEdge1;
+//                    break;
+//                }
+        default:
+                {
+//                    videoOnly = true;
+                    vplayer->stop();
+                    vplayer2->stop();
+                    sliderScaleVal = timeCells[ui->tableWidget->currentColumn()].endTime- timeCells[ui->tableWidget->currentColumn()].beginTime;
+                    break;
+                }
+    }
+
+
+
+        ui->horizontalSlider->setMaximum(sliderScaleVal);
+        qDebug() << "sliderscaleval at createFakeTimeScale" << sliderScaleVal;
+//        int sliderPageCount = 100;
+//        if (sliderScaleVal < sliderPageCount)
+//            sliderPageCount = sliderScaleVal;
+         qDebug() << "entering createfaketimescale function";
+//        ui->horizontalSlider->setPageStep(sliderScaleVal/sliderPageCount);
+//        timer->start();
+        mythread->start();
+//        thread()->exit();
+        qDebug() <<"exiting createfaketimescale func its sliderscaleval" <<sliderScaleVal;
     return 0;
 }
 
@@ -1529,7 +1553,7 @@ void MainWindow::updateTime()//i don't like this func
 //    mythread->start();
 //    mutex.lock();
     tickCounter++;
-    if((ui->horizontalSlider->value()==ui->horizontalSlider->maximum())&(ui->horizontalSlider->maximum()>5))//&(value!=lastVal))
+    if((ui->horizontalSlider->value()>=ui->horizontalSlider->maximum())&(ui->horizontalSlider->maximum()>1))//&(value!=lastVal))
     {
         if(!isSliderPressed)
         {
@@ -1538,10 +1562,12 @@ void MainWindow::updateTime()//i don't like this func
             ui->horizontalSlider->releaseMouse();
 
     //        ui->horizontalSlider->blockSignals(true);
-            qDebug() << "get next segment here";
+            qDebug() << "get next segment here" << delayMs;
             moveToNextTimeFrame();
             ui->horizontalSlider->setEnabled(true);
         }
+        else
+            qDebug() << "delay" << delayMs;
     }
     if(!videoOnly)
         delayMs++;
@@ -2433,6 +2459,189 @@ void MainWindow::on_action_triggered()
 
 }
 
+void MainWindow::createCellVector()
+{
+    qDebug() << "starting create cell vector";
+    int length = dataMap.size();
+    int totalWidth = dataMap[dataMap.size()-1].timeEdge2 - dataMap[0].timeEdge1;\
+    qDebug() << "width of " << totalWidth;
+//    qDebug() << "width of tablewidget"<< ui->tableWidget->width();
+//    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    if(length!=0)
+    {
+//        ui->tableWidget->setEnabled(true);
+//        ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+
+//        ui->tableWidget->setColumnCount(length);
+//        ui->tableWidget->horizontalHeader()->set
+     //   ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        int k = 0,tmpGreenLength=0, tmpGrayLength=0, tmpWhiteLength=0,tmpTimeCell=0;
+
+//        pageFlagVector.append(0);
+      //   ui->tableWidget->setColumnCount(1);
+        qDebug() << "number of green bars on the tablewidget" << length;
+//        pageVector.clear();
+//        pageFlagVector.clear();
+        tableCell tc;
+        for(int i = 0; i < length; i++)
+        {
+            qDebug() << "cycle number" << i;
+            int colorcounter=0;
+            int tmpMax = 0;
+
+            for(int a = 0; a < dataMap[i].videoTimeEdges.size();a++)
+            {
+                int tmpTime = dataMap[i].videoTimeEdges[a]+dataMap[i].camTimeOffsets[a]/1000;
+                if(tmpMax < tmpTime)
+                    tmpMax = tmpTime;
+            }
+            tmpGreenLength = tmpMax;
+            tmpGrayLength = dataMap[i].logTimeEdge2-dataMap[i].timeEdge1;
+            if(tmpGrayLength<0)
+                tmpGrayLength = 0;
+            tmpTimeCell = dataMap[i].timeEdge2-dataMap[i].timeEdge1;
+            qDebug()<< "timecell" << tmpTimeCell;
+            if(tmpGreenLength>tmpGrayLength)
+            {
+                tmpGrayLength= 0;
+                if(tmpTimeCell>tmpGreenLength)
+                   tmpWhiteLength  =  tmpTimeCell - tmpGreenLength;
+//                tmpWhiteLength = 0;
+            }
+            else
+            {
+               tmpGrayLength = tmpGrayLength-tmpGreenLength;
+               if(tmpTimeCell>(tmpGreenLength+tmpGrayLength))
+                   tmpWhiteLength = tmpTimeCell - (tmpGreenLength+tmpGrayLength);
+               else
+                   tmpWhiteLength = 0;
+            }
+            qDebug() << "timecell"<< tmpTimeCell <<"tmpgreenlength"<< tmpGreenLength<<"tmpwhitelength"<< tmpWhiteLength<< "tmpgraylength"<< tmpGrayLength;
+            bool redFlag = true;
+            for(int b = 0; b < dataMap[i].camTimeOffsets.size(); b++)
+            {
+//                qDebug() << dataMap[i].videoTimeEdges.at(b);
+
+                if((dataMap[i].camTimeOffsets.at(b)>0)&(dataMap[i].videoTimeEdges.at(b)>0))
+                    redFlag = false;
+                else if((dataMap[i].camTimeOffsets.at(b)==0)&(dataMap[i].videoTimeEdges.at(b)==0))
+                    redFlag = false;
+                else
+                {
+                    redFlag = true;
+                    b = dataMap[i].camTimeOffsets.size();
+//                    qDebug() << "redflag appears";
+                }
+
+            }
+            if(tmpGreenLength>0)
+            {
+                tc.donor = 0;
+                tc.beginTime = dataMap[i].timeEdge1;
+                tc.endTime = tc.beginTime+tmpGreenLength;
+//                QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
+                float tmplength = (float)tmpGreenLength/totalWidth;
+                tc.colWidth = ui->tableWidget->width()*(tmplength);
+
+                if(!redFlag)
+                    tc.cellType = 0;
+                else
+                    tc.cellType = 3;
+                tc.relativeWidth = tmplength;
+                tc.currentPage = i;
+                timeCells.append(tc);
+//                qDebug() << "green length exists" << tmpGreenLength;
+                k++;
+
+            }
+            if(tmpGrayLength>0)
+            {
+                tc.donor = 0;
+                tc.beginTime = dataMap[i].timeEdge1+tmpGreenLength;
+                tc.endTime = tc.beginTime+tmpGrayLength;
+                float tmplength = (float)tmpGrayLength/totalWidth;
+                tc.colWidth = ui->tableWidget->width()*(tmplength);
+//                qDebug() << "tmplength" << tmplength;
+                if(!redFlag)
+                    tc.cellType = 1;
+                else
+                    tc.cellType = 3;
+                tc.relativeWidth = tmplength;
+                tc.currentPage = i;
+                timeCells.append(tc);
+                k++;
+
+            }
+            if(tmpWhiteLength>0)
+            {
+                tc.donor = 0;
+                tc.beginTime = dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength;
+                tc.endTime = tc.beginTime+tmpWhiteLength;
+                float tmplength = (float)tmpWhiteLength/totalWidth;
+                tc.colWidth = ui->tableWidget->width()*(tmplength);
+//                qDebug() << "tmplength" << tmplength;
+//                if(!redFlag)
+                    tc.cellType = 2;
+//                else
+//                    tc.cellType = 3;
+                tc.relativeWidth = tmplength;
+                tc.currentPage = i;
+                timeCells.append(tc);
+                k++;
+
+            }
+            qDebug() << "circle finished";
+        }
+    }
+    int acceptorCounts=0,donorCounts=0;
+    for(int a = 0; a < timeCells.size(); a++)
+    {
+        qDebug() << "cell number" << a << "*********************************************";
+        qDebug() << "begin time" <<timeCells[a].beginTime;
+        qDebug() << "end time" <<timeCells[a].endTime;
+        qDebug() << "cell type" <<timeCells[a].cellType;
+        qDebug() << "current page" <<timeCells[a].currentPage;
+        qDebug() << "relative width" <<timeCells[a].relativeWidth;
+        qDebug() << "column width" << timeCells[a].colWidth;
+        if(timeCells[a].colWidth<1)
+            acceptorCounts++;
+        else if(timeCells[a].colWidth>5)
+        {
+//            if(timeCells[a].cellType==0)
+                donorCounts++;
+        }
+    }
+    qDebug() << acceptorCounts;
+    qDebug() << donorCounts;
+    if(acceptorCounts)
+    {
+        for(int a = 0; a < timeCells.size(); a++)
+        {
+            if(acceptorCounts>0)
+            {
+                if(timeCells[a].colWidth < 1)
+                {
+                    timeCells[a].colWidth=1;
+                    timeCells[a].donor = 2;
+                    acceptorCounts--;
+                }
+            }
+            if(donorCounts>0)
+            {
+                if(timeCells[a].colWidth>5)
+                {
+                    timeCells[a].colWidth = timeCells[a].colWidth-1;
+                    timeCells[a].donor = 1;
+                    donorCounts--;
+                }
+            }
+            qDebug() << "donor" << timeCells[a].donor;
+        }
+
+    }
+
+}
+
 void MainWindow::on_pushButton_clicked()
 {
 
@@ -2480,7 +2689,9 @@ void MainWindow::on_pushButton_clicked()
             }
 
         }
+        createCellVector();
         initColoredScale();
+
         qDebug() << "column widthes";
         for(int a = 0; a < pageVector.size();a++)
             qDebug() << ui->tableWidget->columnWidth(a);
@@ -2545,7 +2756,7 @@ void MainWindow::on_pushButton_clicked()
             tmp.setHMS(0,0,0);
             ui->timeEdit->setTime(tmp);
         }
-        createFakeTimeScale();
+        createFakeTimeScale(0);
         initThermoNames(&thNames);
         initSmallThermos(initThermoMaxs(&thMaxs),thNames,thMaxs);
 //        initBigThermos(2);
@@ -2570,7 +2781,7 @@ void MainWindow::on_pushButton_clicked()
     else
     {
 //        videoOnly = true;
-        createFakeTimeScale();
+        createFakeTimeScale(0);
         ui->comboBox->setCurrentIndex(1);
         ui->comboBox_2->setCurrentIndex(2);
         openVideoFile(videoList[0],videoList[1]);
@@ -2596,7 +2807,10 @@ void MainWindow::on_pushButton_clicked()
         qDebug() << "player has state" << vplayer->_player->state();
         qDebug() << "player2 has state" << vplayer2->_player->state();
         if(vplayer->_player->state()==3)
+        {
             mythread->start();
+            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+        }
 //        if(mythread->isFinished())
 //            mythread->start();
 }
@@ -2948,7 +3162,7 @@ int MainWindow::openVideoFile(QString filename1, QString filename2)
 #endif
         timeSegmentIterator = videoList.indexOf(filename1)/(ui->comboBox->count()-1);
         //qDebug() << "moved to index" << timeSegmentIterator;
-        createFakeTimeScale();
+        createFakeTimeScale(0);
    return 0;
 }
 void MainWindow::simpleDelayTimerTick()
@@ -3308,12 +3522,14 @@ void MainWindow::on_playButton_clicked()
                 timer->stop();
                 mythread->exit();
                 getTimeTimer->stop();
+                ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
             }
         else
             {
                 timer->start(mainTimerInterval);
                 mythread->start();
                 getTimeTimer->start(1);
+                ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
             }
     playButtonPressed=!playButtonPressed;
 #ifdef GLOBALMODE
@@ -3327,6 +3543,9 @@ void MainWindow::on_stopButton_clicked()
 #ifdef GLOBALMODE
 //    vplayer->pause();
 //    vplayer2->pause();
+    ui->horizontalSlider->setEnabled(false);
+//    ui->ScaleWidget->close();
+
     ui->playButton->click();
     vplayer->stop();
     vplayer2->stop();
@@ -3340,6 +3559,7 @@ void MainWindow::on_stopButton_clicked()
     ui->comboBox->clear();
     ui->comboBox_2->clear();
     ui->tableWidget->clear();
+    ui->tableWidget->setColumnCount(0);
     ui->tableWidget_2->clear();
 //    ui->tableWidget_3->clear();
 //    qDebug() << ui->tableWidget_3->rowCount();
@@ -3377,6 +3597,7 @@ void MainWindow::on_stopButton_clicked()
     videoButton->setEnabled(true);
     setButtonsEnable(false);
     dataMap.clear();
+    timeCells.clear();
     videoList.clear();
     logList.clear();
     camOffsets.clear();
@@ -3446,34 +3667,47 @@ void MainWindow::on_timeEdit_userTimeChanged(const QTime &time)
 
 void MainWindow::on_nextTimeSegment_clicked()
 {
-    pageIndex++;
-    if(pageIndex>dataMap.size()-1)
-        pageIndex = dataMap.size()-1;
-    int tmp1=0,tmp2=0;
-    ui->tableWidget->setCurrentCell(0,pageIndex);
-    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
 
-    while(tmp1<=ui->comboBox->currentIndex())
+    if(ui->tableWidget->currentColumn()<ui->tableWidget->columnCount())
     {
-        Iter1.next();
-        tmp1++;
+        ui->tableWidget->setCurrentCell(0,ui->tableWidget->currentColumn()+1);
+         moveToAnotherTimeSegment(ui->tableWidget->currentColumn());
     }
-    while(tmp2<=ui->comboBox_2->currentIndex())
-    {
-        Iter2.next();
-        tmp2++;
-    }
-    qDebug() << ui->comboBox->currentIndex();
-    qDebug() << ui->comboBox_2->currentIndex();
-    qDebug() << Iter1.key();
-    qDebug() << Iter2.key();
-        openVideoFile(Iter1.key(),Iter2.key());
-        openLogFile(dataMap[pageIndex].logName);
-        if(mythread->isRunning())
-            mythread->exit();
-        if(vplayer->_player->state()==3)
-            mythread->start();
+    else
+         ui->tableWidget->setCurrentCell(0,ui->tableWidget->currentColumn());
+
+//    on_tableWidget_clicked(const QModelIndex &index);
+//    ui->tableWidget->
+//    int tmp1=0,tmp2=0;
+//    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+//    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+
+//    while(tmp1<=ui->comboBox->currentIndex())
+//    {
+//        Iter1.next();
+//        tmp1++;
+//    }
+//    while(tmp2<=ui->comboBox_2->currentIndex())
+//    {
+//        Iter2.next();
+//        tmp2++;
+//    }
+//    qDebug() << ui->comboBox->currentIndex();
+//    qDebug() << ui->comboBox_2->currentIndex();
+//    qDebug() << Iter1.key();
+//    qDebug() << Iter2.key();
+//        openVideoFile(Iter1.key(),Iter2.key());
+//        openLogFile(dataMap[pageIndex].logName);
+//        if(mythread->isRunning())
+//        {
+//            mythread->exit();
+//            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+//        }
+//        if(vplayer->_player->state()==3)
+//        {
+//            mythread->start();
+//            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+//        }
 
 }
 
@@ -3481,7 +3715,8 @@ void MainWindow::on_nextTimeSegment_clicked()
 void MainWindow::setVideoTime()//its my handmade slot
 {
 //    mutex.lock();
-    int time = vplayer->getCurrentTime();
+
+    int time =0;
     int ms = time%1000;
     time = time/1000;
     QTime outtime;
@@ -3491,46 +3726,35 @@ void MainWindow::setVideoTime()//its my handmade slot
     int tmpDelayMs=0;
     int currentVideoTime = 0;
     int frameLength = 5;//50ms
-    outtime.setHMS(h,m,s,ms);
+
     ui->timeEdit->setTime(outtime);
+
     if(!videoOnly)
     {
-    //    if(delayMs!=vplayer->_player->time()/10)
-    //    delayMs = (int)vplayer->_player->time()/10;
-        //qDebug() << "delayMs1" << delayMs;
-        currentVideoTime =(vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
-        emit sendTicksToWorker(currentVideoTime);
-    //    //qDebug() << "currentVideoTime" << currentVideoTime;
-    //    //qDebug() << "currentVideoFrame" << currentVideoTime/5;
-    //    if(abs(delayMs-currentVideoTime)<10)
-        int mainTime=0;
-        if(vplayer->_player->length()>vplayer2->_player->length())
-            mainTime = vplayer2->_player->time();
-        else
-            mainTime = vplayer->_player->time();
-            tmpDelayMs = (mainTime + flowingOffset+ camOffsets.at(ui->comboBox->currentIndex()-1))/10;//(delayMs*10 + vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/20;//true time is a sum of maxcamoffset,
-    //    else
-    //        tmpDelayMs = currentVideoTime-frameLength;
-    //    //qDebug() << "currentLogFrame" << delayMs/5;
-    //    if(tmpDelayMs < delayMs)
-    //        delayMs = tmpDelayMs + (10 - tmpDelayMs%10);
-    //    else
-    //        delayMs = tmpDelayMs - tmpDelayMs%10;
-    //    if(delayMs < (vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/10)
-        logVideoDelta += delayMs - (vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
-            delayMs = tmpDelayMs;
-        logVideoDeltaCounter++;
-    //    delayMs = delayMs + logVideoDelta/logVideoDeltaCounter;
-        tickCounter = delayMs%50;
-        //qDebug() << vplayer->_player->time();
-        //qDebug() << vplayer2->_player->time();
-    //    //qDebug() << vplayer->_player->time()+camOffsets.at(ui->comboBox->currentIndex()-1);
-        //qDebug() << "delayMs2"<<delayMs;
-    //    //qDebug() << logVideoDelta;
-    //    //qDebug() << logVideoDelta/logVideoDeltaCounter;
-        lastDelay = delayMs;
-//        ui->progressBar_2->setValue(dataMap.at(ui->tableWidget->currentColumn()).timeEdge1-dataMap.at(0).timeEdge1 + delayMs/100 );
-//        qDebug() << "current val progress bar"<< ui->progressBar_2->value();
+        if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
+        {
+            time =  vplayer->getCurrentTime();
+            outtime.setHMS(h,m,s,ms);
+            currentVideoTime =(vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
+            emit sendTicksToWorker(currentVideoTime);
+            int mainTime=0;
+            if(vplayer->_player->length()>vplayer2->_player->length())
+                mainTime = vplayer2->_player->time();
+            else
+                mainTime = vplayer->_player->time();
+                tmpDelayMs = (mainTime + flowingOffset+ camOffsets.at(ui->comboBox->currentIndex()-1))/10;//(delayMs*10 + vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/20;//true time is a sum of maxcamoffset,
+            logVideoDelta += delayMs - (vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
+                delayMs = tmpDelayMs;
+            logVideoDeltaCounter++;
+            tickCounter = delayMs%50;
+            lastDelay = delayMs;
+        }
+//        else
+//        {
+//            logVideoDeltaCounter++;
+//            tickCounter = delayMs%50;
+//            lastDelay = delayMs;
+//        }
     }
     else
     {
@@ -3540,7 +3764,10 @@ void MainWindow::setVideoTime()//its my handmade slot
     if(vplayer->_player->state()==3)
     {
         if(mythread->isFinished())
+        {
             mythread->start();
+            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+        }
     }
 //    mutex.unlock();
 }
@@ -3551,34 +3778,47 @@ void MainWindow::on_previousTimeSegment_clicked()
 {
 //        //////qDebug()() << openConfigFile(&workingDir);
 
-    pageIndex--;
-    qDebug() << "current page is" << pageIndex;
-    if(pageIndex < 0)
-        pageIndex = 0;
-     ui->tableWidget->setCurrentCell(0,pageIndex);
-    int tmp1=0,tmp2=0;
-    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
-    while(tmp1<=ui->comboBox->currentIndex())
+//    pageIndex--;
+//    qDebug() << "current page is" << pageIndex;
+//    if(pageIndex < 0)
+//        pageIndex = 0;
+//     ui->tableWidget->setCurrentCell(0,pageIndex);
+    if(ui->tableWidget->currentColumn()>0)
     {
-        Iter1.next();
-        tmp1++;
+        ui->tableWidget->setCurrentCell(0,ui->tableWidget->currentColumn()-1);
+        moveToAnotherTimeSegment(ui->tableWidget->currentColumn());
     }
-    while(tmp2<=ui->comboBox_2->currentIndex())
-    {
-        Iter2.next();
-        tmp2++;
-    }
-//    vplayer->_player->pause();
-//    vplayer2->_player->pause();
-//    while(vplayer->_player->state()!=4){}
-//    while(vplayer2->_player->state()!=4){}
-        openVideoFile(Iter1.key(),Iter2.key());
-        openLogFile(dataMap[pageIndex].logName);
-        if(mythread->isRunning())
-            mythread->exit();
-        if(vplayer->_player->state()==3)
-            mythread->start();
+    else
+         ui->tableWidget->setCurrentCell(0,ui->tableWidget->currentColumn());
+//    int tmp1=0,tmp2=0;
+//    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+//    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+//    while(tmp1<=ui->comboBox->currentIndex())
+//    {
+//        Iter1.next();
+//        tmp1++;
+//    }
+//    while(tmp2<=ui->comboBox_2->currentIndex())
+//    {
+//        Iter2.next();
+//        tmp2++;
+//    }
+////    vplayer->_player->pause();
+////    vplayer2->_player->pause();
+////    while(vplayer->_player->state()!=4){}
+////    while(vplayer2->_player->state()!=4){}
+//        openVideoFile(Iter1.key(),Iter2.key());
+//        openLogFile(dataMap[pageIndex].logName);
+//        if(mythread->isRunning())
+//        {
+//            mythread->exit();
+//            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+//        }
+//        if(vplayer->_player->state()==3)
+//        {
+//            mythread->start();
+//            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+//        }
 //    pageIndex++;
 //    openVideoFile(dataMap[pageIndex].videoVector.at(ui->comboBox->currentIndex()-1),dataMap[pageIndex].videoVector.at(ui->comboBox_2->currentIndex()-1));
 //    openLogFile(dataMap[pageIndex].logName);
@@ -3992,6 +4232,7 @@ void MainWindow::on_horizontalSlider_sliderReleased()
 {
     isSliderPressed = false;
     mythread->start();
+    ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     vplayer->_player->play();
     vplayer2->_player->play();
 }
@@ -4000,6 +4241,7 @@ void MainWindow::on_horizontalSlider_sliderPressed()
 {
     isSliderPressed = true;
     mythread->exit();
+    ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     vplayer->_player->pause();
     vplayer2->_player->pause();
 }
@@ -4113,64 +4355,117 @@ void MainWindow::on_tableWidget_cellChanged(int row, int column)
 //        if(mythread->isRunning())
 //            mythread->exit();
 }
+void MainWindow::moveToAnotherTimeSegment(int column)
+{
+    bool nextpage = false;
+        if((timeCells[column].cellType==0))//||(timeCells[column].cellType==3))
+        {
+
+            if(pageIndex!=timeCells[column].currentPage)
+                nextpage = true;
+        }
+        else
+            createFakeTimeScale(timeCells[column].cellType);
+        pageIndex = timeCells[column].currentPage;
+        qDebug() << "current column index"<<column;
+        qDebug() << "current pageindex"<< pageIndex;
+        qDebug() << "pageFlagVector" << timeCells[column].cellType;
+        int tmp1=0,tmp2=0;
+    //    ui->tableWidget->setCurrentCell(0,pageIndex);
+        QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+        QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+
+        while(tmp1<=ui->comboBox->currentIndex())
+        {
+            Iter1.next();
+            tmp1++;
+        }
+        while(tmp2<=ui->comboBox_2->currentIndex())
+        {
+            Iter2.next();
+            tmp2++;
+        }
+        qDebug() << ui->comboBox->currentIndex();
+        qDebug() << ui->comboBox_2->currentIndex();
+        qDebug() << Iter1.key();
+        qDebug() << Iter2.key();
+         if(nextpage)
+        {
+
+            openVideoFile(Iter1.key(),Iter2.key());
+            openLogFile(dataMap[pageIndex].logName);
+            if(mythread->isRunning())
+            {
+                mythread->exit();
+                ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+            }
+            if(vplayer->_player->state()==3)
+            {
+                mythread->start();
+                ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+            }
+        }
+}
 
 void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
 {
-//    if(index.column()!=ui->tableWidget->currentColumn())
-    if(pageIndex!=index.column())
-    {
-        //myFrame->drawSecondPolygon(ui->tableWidget,true);
-        //myFrame->update();
-//        if(ui->tableWidget->cellWidget())
-        bool nextvideo = false;
-
-        if(pageIndex!=pageVector.at(index.column()))
-        {
-            if(pageFlagVector.at(index.column())==0)
-                nextvideo = true;
+    moveToAnotherTimeSegment(index.column());
+//        bool nextpage = false;
+//            if((timeCells[index.column()].cellType==0)||(timeCells[index.column()].cellType==3))
+//                nextpage = true;
 //            else
+//                createFakeTimeScale(timeCells[index.column()].cellType);
+//            pageIndex = timeCells[index.column()].currentPage;
+//            qDebug() << "current column index"<<index.column();
+//            qDebug() << "current pageindex"<< pageIndex;
+//            qDebug() << "pageFlagVector" << timeCells[index.column()].cellType;
+//            int tmp1=0,tmp2=0;
+//        //    ui->tableWidget->setCurrentCell(0,pageIndex);
+//            QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+//            QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+
+//            while(tmp1<=ui->comboBox->currentIndex())
 //            {
-//                for()
+//                Iter1.next();
+//                tmp1++;
 //            }
-        }
-            pageIndex = pageVector.at(index.column());
-        qDebug() << "current column index"<<index.column();
-        qDebug() << "current pageindex"<< pageIndex;
-        qDebug() << "pageFlagVector" << pageFlagVector.at(index.column());
-            int tmp1=0,tmp2=0;
-        //    ui->tableWidget->setCurrentCell(0,pageIndex);
-            QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-            QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+//            while(tmp2<=ui->comboBox_2->currentIndex())
+//            {
+//                Iter2.next();
+//                tmp2++;
+//            }
+//            qDebug() << ui->comboBox->currentIndex();
+//            qDebug() << ui->comboBox_2->currentIndex();
+//            qDebug() << Iter1.key();
+//            qDebug() << Iter2.key();
+//        //    vplayer->_player->pause();
+//        //    vplayer2->_player->pause();
+//        //    while(vplayer->_player->state()!=4){}
+//        //    while(vplayer2->_player->state()!=4){}
+//            if(nextpage)
+//            {
 
-            while(tmp1<=ui->comboBox->currentIndex())
-            {
-                Iter1.next();
-                tmp1++;
-            }
-            while(tmp2<=ui->comboBox_2->currentIndex())
-            {
-                Iter2.next();
-                tmp2++;
-            }
-            qDebug() << ui->comboBox->currentIndex();
-            qDebug() << ui->comboBox_2->currentIndex();
-            qDebug() << Iter1.key();
-            qDebug() << Iter2.key();
-        //    vplayer->_player->pause();
-        //    vplayer2->_player->pause();
-        //    while(vplayer->_player->state()!=4){}
-        //    while(vplayer2->_player->state()!=4){}
-            if(nextvideo)
-            {
+//                openVideoFile(Iter1.key(),Iter2.key());
+//                openLogFile(dataMap[pageIndex].logName);
+//                if(mythread->isRunning())
+//                {
+//                    mythread->exit();
+//                    ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+//                }
+//                if(vplayer->_player->state()==3)
+//                {
+//                    mythread->start();
+//                    ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+//                }
+//            }
+//            isSliderPressed = true;
+//            delayMs = (pageStartTimes.at(index.column())-dataMap[pageIndex].timeEdge1)*100;
+//            ui->horizontalSlider->setValue(pageStartTimes.at(index.column())-dataMap[pageIndex].timeEdge1);
+//            qDebug() <<"slider val" <<ui->horizontalSlider->value();
+         //   isSliderPressed = true;
+          //  updateTime();
 
-                openVideoFile(Iter1.key(),Iter2.key());
-                openLogFile(dataMap[pageIndex].logName);
-                if(mythread->isRunning())
-                    mythread->exit();
-                if(vplayer->_player->state()==3)
-                    mythread->start();
-            }
-    }
+  //  }
 }
 
 void MainWindow::on_horizontalSlider_actionTriggered(int action)
