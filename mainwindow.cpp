@@ -20,14 +20,24 @@ void MyThread::run()
 
 void MapTimeScaleDraw::drawLabel(QPainter *painter, double value) const
 {
+//   double beforeVal = value;
     QwtText lbl = tickLabel( painter->font(), value );
     if ( lbl.isEmpty() )
         return;
+//        lbl = tickLabel( painter->font(), beforeVal );
+//     if ( lbl.isEmpty() )
+//        return;
 
     QPointF pos = labelPosition( value );
         pos = labelPosition( value );
+//        if(value==timeArrLength-7201)
+//            pos.setX(pos.x()-45);
         if(value==timeArrLength-1)
             pos.setX(pos.x()-45);
+        else if(value==timeArrLength-timeArrDelta)
+            pos.setX(pos.x()-23);
+//        qDebug() <<"timeArrLength" <<timeArrLength;
+//        qDebug() << "timeArrDelta"<< timeArrDelta;
     QSizeF labelSize = lbl.textSize( painter->font() );
 
     const QTransform transform = labelTransformation( pos, labelSize );
@@ -196,6 +206,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     videoButton = new QPushButton(ui->mainToolBar);
+    ui->line->setVisible(false);
+    ui->line_2->setVisible(false);
+    ui->line_3->setVisible(false);
+    ui->line_4->setVisible(false);
+    ui->line_5->setVisible(false);
+    ui->line_5->installEventFilter(this);
+    ui->ScaleWidget->setVisible(false);
 //    videoCheck = new QCheckBox("");
 //    logButton = new QPushButton("");
 //    logCheck = new QCheckBox("");
@@ -326,6 +343,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    connect(vplayer2->_player, SIGNAL(stateChanged()),this,SLOT(stateTimerTick()));
     connect(simpleDelayTimer, SIGNAL(timeout()),this,SLOT(simpleDelayTimerTick()));
     connect(stateTimer, SIGNAL(timeout()),this,SLOT(stateTimerTick()));
+
 //    connect(getTimeTimer,SIGNAL(timeout()),this,SLOT(getTimeTimerTick()));
 //    connect(vplayer->_player,SIGNAL(paused()),vplayer2->_player,SLOT(pause()));
 //    connect(vplayer2->_player,SIGNAL(paused()),vplayer->_player,SLOT(pause()));
@@ -335,7 +353,11 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->menuBar->setEnabled(true);
 //    ui->menu->setEnabled(true);
 
-    ui->ScaleWidget->setAlignment(QwtScaleDraw::BottomScale);
+    ui->ScaleWidget->setAlignment(QwtScaleDraw::TopScale);
+    ui->ScaleWidget->installEventFilter(this);
+//    QwtPlotMarker marker;
+//    marker.attach(ui->qwtPlot);
+
     secondsCounter = 0;
     realSecondsCounter = 0;
     delayMs = 0;
@@ -371,6 +393,10 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowState(Qt::WindowMaximized);\
     ui->tableWidget->setItemDelegate(new BackgroundDelegate(this));
     ui->tableWidget->setStyleSheet("selection-background-color: rgba(128, 128, 128, 40);");
+//    line1 = new QLine();
+//    line2 = new QLine();
+//    line3 = new QLine();
+//    line4 = new QLine();
 //    ui->progressBar_2->setVisible(false);
 //    qDebug() << ui->line->geometry();
 //    qDebug() << ui->line_2->geometry();
@@ -455,46 +481,78 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->comboBox_2->addItem(tmp);
 
 }
+void MainWindow::correctCellSeekerPosition(int newPos)
+{
+    ui->tableWidget->lower();
+    ui->ScaleWidget->lower();
+    ui->line_5->setLineWidth(4);
+//    ui->line_5->set
+    QRect tmp = ui->line_5->rect();
+/*    tmp.setHeight(30);
+    tmp.setWidth(1)*/;
+    QPoint ptmp;
+//    ptmp.setY(ui->tableWidget->rowViewportPosition(0));
+    ptmp = ui->ScaleWidget->pos();
+    ptmp.setX(ptmp.x()+ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn()));
+//    ptmp.setX(ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn())+10);
+//    ptmp.setY(ui->tableWidget->rowViewportPosition(0));
+    //top line
+   // qDebug() << "newPos" << newPos;
+    tmp.setX(ptmp.x()+newPos);
+    tmp.setY(ptmp.y()+15);
+    tmp.setWidth(3);
+    tmp.setHeight(22);//-tmp.height());
+    ui->line_5->setGeometry(tmp);
+    ui->line_5->setVisible(true);
+//    tmp.setSize(ui->line_5->rect().size());
+//    qDebug() << "column viewport x" << ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn());
+//    qDebug() <<"ui->tableWidget->pos()" <<ui->tableWidget->pos();
+//    qDebug() << "tmp" << tmp;
+//    qDebug() << "newpos"<< newPos;
+}
+
 void MainWindow::correctFramePosition()
 {
-    QRect tmp = ui->line->rect();
-    QPoint ptmp = ui->horizontalSlider->pos();
-    //top line
-    tmp.setX(ptmp.x());
-    tmp.setY(ptmp.y()-tmp.height());
-    tmp.setSize(ui->line->rect().size());
-    ui->line->setGeometry(tmp);
-    //left line
-    tmp = ui->line_2->rect();
-    tmp.setX(ptmp.x());
-    tmp.setY(ptmp.y()-1);
-    tmp.setHeight(ui->horizontalSlider->height());
-    tmp.setWidth(1);
-    ui->line_2->setGeometry(tmp);
-    //right line
-    tmp = ui->line_3->rect();
-    tmp.setX(ptmp.x()+ui->horizontalSlider->width()-1);
-    tmp.setY(ptmp.y()-1);
-    tmp.setHeight(ui->horizontalSlider->height());
-    tmp.setWidth(1);
-    ui->line_3->setGeometry(tmp);
-    //bottom line
-    tmp = ui->line_4->rect();
-    tmp.setX(ptmp.x());
-    tmp.setY(ptmp.y()+ui->horizontalSlider->height()-ui->line->height());
-    tmp.setSize(ui->line->rect().size());
-   // tmp.setHeight(ui->horizontalSlider->height());
-   // tmp.setWidth(1);
-    ui->line_4->setGeometry(tmp);
-    qDebug() << tmp;
-    qDebug() << ui->line_4->pos();
-    qDebug() << ui->line_4->rect();
-    qDebug() << ui->horizontalSlider->pos();
+//    ui->line->setVisible(true);
+//    ui->line_2->setVisible(true);
+//    ui->line_3->setVisible(true);
+//    ui->line_4->setVisible(true);
+
+//    QRect tmp = ui->line->rect();
+//    QPoint ptmp = ui->horizontalSlider->pos();
+//    //top line
+//    tmp.setX(ptmp.x());
+//    tmp.setY(ptmp.y()-tmp.height());
+//    tmp.setSize(ui->line->rect().size());
+
+//    ui->line->setGeometry(tmp);
+//    //left line
+//    tmp = ui->line_2->rect();
+//    tmp.setX(ptmp.x()-1);
+//    tmp.setY(ptmp.y()-1);
+//    tmp.setHeight(ui->horizontalSlider->height());
+//    tmp.setWidth(1);
+//    ui->line_2->setGeometry(tmp);
+//    //right line
+//    tmp = ui->line_3->rect();
+//    tmp.setX(ptmp.x()+ui->horizontalSlider->width());
+//    tmp.setY(ptmp.y()-1);
+//    tmp.setHeight(ui->horizontalSlider->height());
+//    tmp.setWidth(1);
+//    ui->line_3->setGeometry(tmp);
+//    //bottom line
+//    tmp = ui->line_4->rect();
+//    tmp.setX(ptmp.x());
+//    tmp.setY(ptmp.y()+ui->horizontalSlider->height()-ui->line->height()+1);
+//    tmp.setSize(ui->line->rect().size());
+
+//    ui->line_4->setGeometry(tmp);
+
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-//    ////qDebug()() << "test resize";
+    qDebug() << "test resize";
     int X1, Y1, X2, Y2;
     ////qDebug()() << ui->widget_2->geometry();
     ////qDebug()() << vplayer2->getGeometry();
@@ -514,14 +572,50 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     //myFrame->setAttribute(Qt::WA_TransparentForMouseEvents,false);
     //myFrame->setAttribute(Qt::WA_TransparentForMouseEvents,true);
 //    if(currentWidget2Geometry != ui->widget_2->geometry())
+    float totalRelativeWidth=0;
+    int totalColumnWidth = 0;
+
         vplayer2->changeGeometry(currentWidget2Geometry);
         if(dataMap.size()!=0)
         {
-        for(int i =0; i < columnWidthes.size();i++)
-              ui->tableWidget->setColumnWidth(i,ui->tableWidget->width()*columnWidthes.at(i));
+//            timeCells[i].colWidth
+//            for(int i = 0; i < timeCells.size(); i++)
+//            {
+//                ui->tableWidget->setColumnWidth(i,((float)ui->tableWidget->width()*timeCells[i].relativeWidth));
+//                totalColumnWidth+=ui->tableWidget->columnWidth(i);
+//            }
+            for(int i = 0; i < ui->tableWidget->columnCount(); i++)
+                totalColumnWidth+=(float)((ui->tableWidget->width())*timeCells[i].relativeWidth);
+            qDebug() << totalColumnWidth;
+            if(ui->ScaleWidget->width()!=totalColumnWidth)
+            {
+                float correctGain=(float)(ui->ScaleWidget->width())/((float)(totalColumnWidth));
+                qDebug() << "correctGAin" << correctGain;
+                totalColumnWidth=0;
+                totalRelativeWidth=0;
+                for(int i =0; i < timeCells.size();i++)
+                {
+                  ui->tableWidget->setColumnWidth(i,((float)ui->tableWidget->width()*timeCells[i].relativeWidth*(float)correctGain));
+                  totalRelativeWidth+=timeCells[i].relativeWidth;
+                  totalColumnWidth+=ui->tableWidget->columnWidth(i);
+                  if(timeCells[i].donor==1)
+                      ui->tableWidget->setColumnWidth(i,ui->tableWidget->columnWidth(i)-1);
+                  if(timeCells[i].donor==2)
+                      ui->tableWidget->setColumnWidth(i,ui->tableWidget->columnWidth(i)+1);
+                }
+            }
+//            QRect tmpGeometry = ui->tableWidget->geometry();
+//            tmpGeometry.setWidth(totalColumnWidth);
+//            ui->tableWidget->setGeometry(tmpGeometry);
 //            ui->tableWidget->setColumnWidth(i,ui->tableWidget->width()*(dataMap[i].timeEdge2-dataMap[i].timeEdge1)/(dataMap[dataMap.size()-1].timeEdge2 -dataMap[0].timeEdge1 ));
         }
-       // correctFramePosition();
+        else
+            qDebug() << "ERRRORRRRR";
+        qDebug() << "total relative width" << totalRelativeWidth;
+        qDebug() << "total column width" << totalColumnWidth;
+        qDebug() << "width from native method" << ui->tableWidget->width();
+        qDebug() << "width of scale is" << ui->ScaleWidget->width();
+        correctFramePosition();
 //        qDebug() << "column widthes";
 //        for(int a = 0; a < pageVector.size();a++)
 //            qDebug() << ui->tableWidget->columnWidth(a);
@@ -595,7 +689,7 @@ int MainWindow::initColoredScale()
     for(int a = 0; a< timeCells.size(); a++)
     {
         ui->tableWidget->insertColumn(a);
-        qDebug() << "column number" << a << " inserted in tablewidget";
+        qDebug() << "column number" << a << " inserted in tablewidget"<<timeCells[a].cellType;
 //        QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
         ui->tableWidget->setItem(0,a, new QTableWidgetItem);
         ui->tableWidget->item(0,a)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -630,159 +724,27 @@ int MainWindow::initColoredScale()
     }
     if(length!=0)
     {
-//        ui->tableWidget->setEnabled(true);
-//        ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
-//        int k = 0,tmpGreenLength=0, tmpGrayLength=0, tmpWhiteLength=0,tmpTimeCell=0;
-//        qDebug() << "number of green bars on the tablewidget" << length;
-//        pageVector.clear();
-//        pageFlagVector.clear();
-//        for(int i = 0; i < length; i++)
-//        {
-//            qDebug() << "cycle number" << i;
-//            int colorcounter=0;
-//            int tmpMax = 0;
-//            for(int a = 0; a < dataMap[i].videoTimeEdges.size();a++)
-//            {
-//                int tmpTime = dataMap[i].videoTimeEdges[a]+dataMap[i].camTimeOffsets[a]/1000;
-//                if(tmpMax < tmpTime)
-//                    tmpMax = tmpTime;
-//            }
-//            tmpGreenLength = tmpMax;
-//            tmpGrayLength = dataMap[i].logTimeEdge2-dataMap[i].timeEdge1;
-//            tmpTimeCell = dataMap[i].timeEdge2-dataMap[i].timeEdge1;
-//            if(tmpGreenLength>tmpGrayLength)
-//            {
-//                tmpGrayLength= 0;
-//                if(tmpTimeCell>tmpGreenLength)
-//                   tmpWhiteLength  =  tmpTimeCell - tmpGreenLength;
-//            }
-//            else
-//            {
-//               tmpGrayLength = tmpGrayLength-tmpGreenLength;
-//               if(tmpTimeCell>tmpGreenLength+tmpGrayLength)
-//                   tmpWhiteLength = tmpTimeCell - (tmpGreenLength+tmpGrayLength);
-//            }
-//            bool redFlag = true;
-//            for(int b = 0; b < dataMap[i].camTimeOffsets.size(); b++)
-//            {
-//                qDebug() << dataMap[i].videoTimeEdges.at(b);
-//                if((dataMap[i].camTimeOffsets.at(b)>0)&(dataMap[i].videoTimeEdges.at(b)>0))
-//                    redFlag = false;
-//                else if((dataMap[i].camTimeOffsets.at(b)==0)&(dataMap[i].videoTimeEdges.at(b)==0))
-//                    redFlag = false;
-//                else
-//                {
-//                    redFlag = true;
-//                    b = dataMap[i].camTimeOffsets.size();
-//                    qDebug() << "redflag appears";
-//                }
 
-//            }
-//            if(tmpGreenLength>0)
-//            {
-//                pageVector.append(i);
-//                ui->tableWidget->insertColumn(k);
-//                qDebug() << "column number" << k << " inserted in tablewidget";
-//                QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
-//                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
-//                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-//                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength).toUTC().time()).toString());
-//                float tmplength = (float)tmpGreenLength/totalWidth;
-//                qDebug() << "tmplength" << tmplength;
-//                columnWidthes.append(tmplength);
-//                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*((float)tmpGreenLength/totalWidth));
-//                pageEndTimes.append(dataMap[i].timeEdge1+tmpGreenLength);
-//                if(redFlag)
-//                {
-//                    ui->tableWidget->item(0,k)->setBackground(Qt::red);
-//                    pageFlagVector.append(3);
-//                }
-//                else
-//                {
-//                    ui->tableWidget->item(0,k)->setBackground(Qt::green);
-//                    pageFlagVector.append(0);
-//                }
-//                qDebug() << "green length exists" << tmpGreenLength;
-//                qDebug() << ui->tableWidget->columnWidth(k);
-//                k++;
-
-//            }
-//            if(tmpGrayLength!=0)
-//            {
-//                float tmplength = (float)tmpGrayLength/totalWidth;
-//                qDebug() << "tmplength" << tmplength;
-//                columnWidthes.append(tmplength);
-//                int tmpwidth = ui->tableWidget->width()*((float)tmpGrayLength/totalWidth);
-//                ui->tableWidget->insertColumn(k);
-//                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
-//                qDebug() << "column number" << k << " inserted in tablewidget";
-//                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-//                qDebug() << "gray length exists"<<tmpGrayLength;
-//                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength).toUTC().time()).toString());
-//                ui->tableWidget->setColumnWidth(k,tmpwidth);
-//                 if(redFlag)
-//                 {
-//                     ui->tableWidget->item(0,k)->setBackground(Qt::red);
-//                     pageFlagVector.append(3);
-//                 }
-//                 else
-//                 {
-//                     ui->tableWidget->item(0,k)->setBackground(Qt::gray);
-//                     pageFlagVector.append(1);
-//                 }
-//                 pageEndTimes.append(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength);
-//                 qDebug() << ui->tableWidget->columnWidth(k);
-//                 pageVector.append(i);
-//                 k++;
-
-//            }
-//            if(tmpWhiteLength!=0)
-//            {
-//                float tmplength = (float)tmpWhiteLength/totalWidth;
-//                qDebug() << "tmplength" << tmplength;
-//                columnWidthes.append(tmplength);
-//                qDebug() << "white length exists"<< tmpTimeCell - tmpGreenLength-tmpGrayLength;
-//                ui->tableWidget->insertColumn(k);
-//                qDebug() << "column number" << k << " inserted in tablewidget";
-//                ui->tableWidget->setItem(0,k, new QTableWidgetItem);
-//                ui->tableWidget->item(0,k)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-//                ui->tableWidget->item(0,k)->setToolTip((QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength).toUTC().time()).toString()+" - "+(QDateTime::fromTime_t(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength+tmpWhiteLength).toUTC().time()).toString());
-//                ui->tableWidget->setColumnWidth(k,ui->tableWidget->width()*(float)tmpWhiteLength/totalWidth);
-//                if(redFlag)
-//                {
-//                    ui->tableWidget->item(0,k)->setBackground(Qt::red);
-//                    pageFlagVector.append(3);
-//                }
-//                else
-//                {
-//                    ui->tableWidget->item(0,k)->setBackground(Qt::white);
-//                    pageFlagVector.append(2);
-//                }
-//                 pageVector.append(i);
-//                pageEndTimes.append(dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength+tmpWhiteLength);
-//                k++;
-
-//            }
-//            qDebug() << "circle finished";
-//        }
         QFont font;
+        ui->ScaleWidget->setVisible(true);
         font.setStyleName("Courier");
         font.setBold(true);
         font.setPixelSize(10);
         ui->tableWidget->setFont(font);
-        int timeScaleTickCounter = 21;
-        int tmpTotalTime = (int)(dataMap[dataMap.size()-1].timeEdge2 - dataMap[0].timeEdge1);
+        int timeScaleTickCounter = 23;
+        qDebug() << "TIMECELLTOTALTIME" << timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+        int tmpTotalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;//(int)(dataMap[dataMap.size()-1].timeEdge2 - dataMap[0].timeEdge1);
         time_t step = (int)(tmpTotalTime/(timeScaleTickCounter-1));
         time_t vals[tmpTotalTime];
         for(int i =0; i < tmpTotalTime-1; i++)
         {
-            vals[i] = dataMap[0].timeEdge1+i/**step*/;
+            vals[i] = timeCells[0].beginTime+i;//dataMap[0].timeEdge1+i/**step*/;
         }
-        vals[tmpTotalTime-1] = dataMap[dataMap.size()-1].timeEdge2;
+        vals[tmpTotalTime-1] = timeCells[timeCells.size()-1].endTime;//dataMap[dataMap.size()-1].timeEdge2;
         QList<double> ticks[QwtScaleDiv::NTickTypes];
         QList<double> &majorTicks = ticks[QwtScaleDiv::MajorTick];
         QList<double> &minorTicks = ticks[QwtScaleDiv::MinorTick];
-        int tmpStartTime = dataMap[0].timeEdge1%3600;
+        int tmpStartTime = timeCells[0].beginTime%7200;//dataMap[0].timeEdge1%7200;
         qDebug() << "TMPSTARTTIME" << tmpStartTime;
         qDebug() << "TMPTOTALTIME" << tmpTotalTime;
         for (int i = 0; i < tmpTotalTime ; i++)
@@ -791,11 +753,11 @@ int MainWindow::initColoredScale()
                 majorTicks.append(i);
             if(i==tmpTotalTime-1)
                 majorTicks.append(i);
-            if ((tmpStartTime+i) % 3600 == 0)
+            if ((tmpStartTime+i) % 7200 == 0)
             {
                 majorTicks.append(i);
             }
-            else if ((tmpStartTime+i)%1800==0)
+            else if ((tmpStartTime+i)%3600==0)
             {
                 minorTicks.append(i);
             }
@@ -807,6 +769,8 @@ int MainWindow::initColoredScale()
         qDebug() << "Quit Creating Time Scale";
         QwtScaleDiv mTimeScaleDiv = QwtScaleDiv(majorTicks.first(), majorTicks.last(), ticks);
         mapTimeScale = new MapTimeScaleDraw("hh:mm:ss");
+        qDebug() <<"majortickssize" << majorTicks.at(majorTicks.size()-2);
+        mapTimeScale->setTimeArrayDelta(tmpTotalTime-majorTicks[majorTicks.size()-2]);
         mapTimeScale->setTimeArr(vals,tmpTotalTime);
         mapTimeScale->setLabelAlignment(Qt::AlignRight);
         ui->ScaleWidget->setScaleDraw(mapTimeScale);
@@ -815,11 +779,18 @@ int MainWindow::initColoredScale()
         ui->ScaleWidget->setScaleDiv(tr,mTimeScaleDiv);
     }
     else return 1;
+    moveToAnotherTimeSegment(0);
     ui->tableWidget->selectColumn(0);
-    for(int a =0 ; a < pageFlagVector.size(); a++)
-    {
-        qDebug() << "pageFlagVector :" << pageFlagVector.at(a) <<"pageVector" << pageVector.at(a)<<"pageEndTimes"<<pageEndTimes.at(a);
-    }
+//    for(int a =0 ; a < pageFlagVector.size(); a++)
+//    {
+//        qDebug() << "pageFlagVector :" << pageFlagVector.at(a) <<"pageVector" << pageVector.at(a)<<"pageEndTimes"<<pageEndTimes.at(a);
+//    }
+    qDebug() << "pos4";
+    correctCellSeekerPosition(((float)(delayMs/100)/(timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime))*ui->ScaleWidget->width());
+    //ui->tableWidget->installEventFilter(this);
+    ui->tableWidget->viewport()->installEventFilter(this);
+    this->resize(this->size().width()-1,this->size().height()-1);
+    this->resize(this->size().width()+1,this->size().height()+1);
     return 0;
 }
 
@@ -864,15 +835,36 @@ int MainWindow::initThermoMaxs(QVector <long> *thermoMaxs)
 int MainWindow::initThermoNames(QVector<QString> *thermoNames)
 {
     int retval = 0;
+   // qDebug() <<
     for(int i = 0; i < interpreter->interpreterRecordsCount; i++)
     {
-
+            qDebug() << interpreter->TInterpItemArray[i].name;
             if((interpreter->TInterpItemArray[i].typ&0xffff) == 34 )
             {
                 retval++;
                 ////qDebug()() << interpreter->TInterpItemArray[i].name;
                 thermoNames->append(interpreter->TInterpItemArray[i].name);
             }
+
+//            if((interpreter->TInterpItemArray[i].typ&0xffff) == 13 )
+//            {
+//                retval++;
+
+//                thermoNames->append(interpreter->TInterpItemArray[i].name);
+//            }
+            qDebug() <<"typ"<<i <<(interpreter->TInterpItemArray[i].typ&0xffff);
+//            if((interpreter->TInterpItemArray[i].typ&0xffff) == 17)
+//            {
+//                retval++;
+//                ////qDebug()() << interpreter->TInterpItemArray[i].name;
+//                thermoNames->append(interpreter->TInterpItemArray[i].name);
+//            }
+//            if((interpreter->TInterpItemArray[i].typ&0xffff) == 18)
+//            {
+//                retval++;
+//                ////qDebug()() << interpreter->TInterpItemArray[i].name;
+//                thermoNames->append(interpreter->TInterpItemArray[i].name);
+//            }
 //            if((interpreter->TInterpItemArray[i].typ&0xffff) ==  )
 //            {
 //                retval++;
@@ -939,7 +931,7 @@ int MainWindow::makeStructFromRecord(char *record,/*int recsize,*/ dataParams* d
             dp->doubleTypes.append((double)tmpDbl);
             dp->paramsSequence.append(34);
             dp->paramsVisibleArr.append(1);
-//            qDebug()() << tmpDbl;
+//            qDebug() << tmpDbl;
             break;
         }
         case 7:
@@ -947,7 +939,7 @@ int MainWindow::makeStructFromRecord(char *record,/*int recsize,*/ dataParams* d
             float tmpFloat, tmpMinFloat, tmpMaxFloat;
             int tmpIntFloat;
             tmpFloat = interpreter->fieldFloat(&record[recIndex]);
-            ////qDebug()() << tmpFloat;
+//            qDebug() << tmpFloat;
             if(tmpFloat==tmpFloat)
             {
                 tmpMinFloat = interpreter->TInterpItemArray[i].min/pow(10,interpreter->TInterpItemArray[i].mask_);
@@ -985,8 +977,11 @@ int MainWindow::makeStructFromRecord(char *record,/*int recsize,*/ dataParams* d
         {
             ////////qDebug() << interpreter->TInterpItemArray[i].name;
             recTime = (time_t)interpreter->fieldInt(&record[recIndex]);
-            recTime = mktime(gmtime(&recTime));
-            ////qDebug()() << QDateTime::fromTime_t(recTime);
+//            qDebug() << recTime;
+//            recTime = mktime(gmtime(&recTime));
+//            qDebug() << recTime;
+//            qDebug() << QDateTime::fromTime_t(recTime).toUTC();
+//            qDebug() << QDateTime::fromTime_t(recTime).toUTC().toLocalTime();
             if(interpreter->TInterpItemArray[i].name!="PowOnTime")
             {
                 dp->time.append(recTime);
@@ -1004,7 +999,7 @@ int MainWindow::makeStructFromRecord(char *record,/*int recsize,*/ dataParams* d
 
 //            powOnTimeArrayExistFlag = true;
             recTime = (time_t)interpreter->fieldInt(&record[recIndex]);
-            recTime = mktime(gmtime(&recTime));
+//            recTime = mktime(gmtime(&recTime));
            // powOnTimeArray[backIndex] = recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
             dp->powOnTime.append(recTime);
             dp->paramsSequence.append(4);
@@ -1104,12 +1099,15 @@ bool MainWindow::createTimeSegment(QStringList *listOfLogs)
     time_t one,two;
     //qDebug() << "logList size" << listOfLogs->size();
     qDebug() << "creating time segment now";
-    
+    videoTimes.clear();
     timeSegment.clear();
+    camOffsets.clear();
+    offsetsCounter.clear();
     ui->progressBar->setMaximum(listOfLogs->size()-1);
     ui->progressBar->setMinimum(0);
     ui->progressBar->setValue(0);
     ui->progressBar->setVisible(true);
+    correctFramePosition();
     ui->mainToolBar->setEnabled(false);
         for(int i = 0; i < listOfLogs->size();i++)//something gets from listOfLogs
         {
@@ -1179,8 +1177,8 @@ bool MainWindow::createTimeSegment(QStringList *listOfLogs)
                     else inverseTime = false;
                     timeSegment.append(one);
                     timeSegment.append(two);
-//                    qDebug() << one;
-//                    qDebug() << two;
+                    qDebug() << one;
+                    qDebug() << two;
                   }
                   else
                   {
@@ -1200,6 +1198,7 @@ bool MainWindow::createTimeSegment(QStringList *listOfLogs)
         for(int a = 0; a< videoTimes.size();a++)
             qDebug() << videoTimes.at(a);
                     ui->progressBar->setVisible(false);
+                    correctFramePosition();
     ui->mainToolBar->setEnabled(true);
 //    ui->comboBox->removeItem(0);
 //    ui->comboBox_2->removeItem(0);
@@ -1220,6 +1219,7 @@ int MainWindow::createFakeTimeScale(int mode)
     {
         vplayer->stop();
         vplayer2->stop();
+        correctFramePosition();
     }
     mythread->exit();
 //    thread()->exit();
@@ -1236,7 +1236,7 @@ int MainWindow::createFakeTimeScale(int mode)
     }
 //    qDebug() << ui->tableWidget->currentColumn() << ui->tableWidget->columnCount()<<pageIndex;
 
-    qDebug() << "entering createfaketimescale function" << mode << pageEndTimes.at(ui->tableWidget->currentColumn());
+//    qDebug() << "entering createfaketimescale function" << mode << pageEndTimes.at(ui->tableWidget->currentColumn());
     switch(mode)
     {
         case 0:
@@ -1280,7 +1280,9 @@ int MainWindow::createFakeTimeScale(int mode)
                 {
 //                    videoOnly = true;
                     vplayer->stop();
+                    correctFramePosition();
                     vplayer2->stop();
+                    correctFramePosition();
                     sliderScaleVal = timeCells[ui->tableWidget->currentColumn()].endTime- timeCells[ui->tableWidget->currentColumn()].beginTime;
                     break;
                 }
@@ -1299,6 +1301,7 @@ int MainWindow::createFakeTimeScale(int mode)
         mythread->start();
 //        thread()->exit();
         qDebug() <<"exiting createfaketimescale func its sliderscaleval" <<sliderScaleVal;
+        correctFramePosition();
     return 0;
 }
 
@@ -1317,8 +1320,17 @@ int MainWindow::initSmallThermos(int qty, QVector <QString> names, QVector <long
         QLabel *tmptext = new QLabel(names[i]);
 //        thermoLayout[i%4].addWidget(&tmptext);
 //        thermoLayout[i%4].addWidget(parameterBar[i]);
-        thermoVals.append(new QLabel("0"));
-        thermoVals.at(i)->setParent(0);
+        thermoVals.append(new QLineEdit("0"));
+
+        QRect tmpG = thermoVals.at(i)->geometry();
+        tmpG.setWidth(10);
+        thermoVals.at(i)->setBaseSize(10,5);
+        thermoVals.at(i)->setFrame(false);
+        thermoVals.at(i)->setGeometry(tmpG);
+        thermoVals.at(i)->setEnabled(false);
+//        thermoVals.at(i)->setText("0");
+        thermoVals.at(i)->installEventFilter(this);
+//        thermoVals.at(i)->setParent(this);
         ui->gridLayout_2->addWidget(parameterBar[i],2*(int)(i/4)+1,i%4,Qt::AlignLeft);
         ui->gridLayout_2->addWidget(tmptext,2*(int)(i/4),i%4, Qt::AlignLeft);
         ui->gridLayout_2->addWidget(thermoVals[i],2*(int)(i/4),i%4, Qt::AlignRight);
@@ -1429,73 +1441,77 @@ void MainWindow::setFolderWFiles(QString path)
 void MainWindow::selectVideoFolder()
 {
 
-//    QString videodir = QFileDialog::getExistingDirectory(this, tr("Выбор директории видеофайлов"),QDir::homePath());
-//    QString readVideoDir;
-//    if(!openVideoConfigFile(&readVideoDir))
-//        createVideoConfigFile(videodir);
-    //////qDebug()() << readDir;
-//    if(!openLogConfigFile(&readDir))
-//        createConfigFile(logdir,videodir);
-//    videoWorkingDir = readVideoDir;
+    if(accepted)
+    {
+        QString videodir = logWorkingDir;
 
-    QString videodir = logWorkingDir;
-//    ////qDebug()() << checkVideoFilesExistance(videoWorkingDir);
-    if(checkVideoFilesExistance(videodir)==0)
-    {
-        newMessage.setWindowTitle("Ошибка!");
-        newMessage.setText("В выбранной вами папке видеофайлов не обнаружено! Пожалуйста, попробуйте еще раз.");
-        newMessage.exec();
-        VideoFileError = 2;
-    }
-    else
-    {
-        VideoFileError = 0;
-        videoWorkingDir = videodir;
-        logWorkingDir = videodir;
-         ////qDebug()() << videoWorkingDir;
-//         ui->lineEdit->setText(videoWorkingDir);
-//         ui->lineEdit_2->setText(videoWorkingDir);
-//         logCheck->setChecked(true);
-//         videoCheck->setChecked(true);
-         openVideoFilesFolder(&videoList);
-         openLogFilesFolder(&logList);
-         isFolderOpened = true;
-         ////qDebug()() << videoList;
-    }
-    if((VideoFileError==0)&(LogFileError==0))
-    {
-        setButtonPanelEnabled(true);
+    //    ////qDebug()() << checkVideoFilesExistance(videoWorkingDir);
+        if(checkVideoFilesExistance(videodir)==0)
+        {
+            newMessage.setWindowTitle("Ошибка!");
+            newMessage.setText("В выбранной вами папке видеофайлов не обнаружено! Пожалуйста, попробуйте еще раз.");
+            newMessage.exec();
+            VideoFileError = 2;
+        }
+        else
+        {
+            VideoFileError = 0;
+            videoWorkingDir = videodir;
+            logWorkingDir = videodir;
+             ////qDebug()() << videoWorkingDir;
+    //         ui->lineEdit->setText(videoWorkingDir);
+    //         ui->lineEdit_2->setText(videoWorkingDir);
+    //         logCheck->setChecked(true);
+    //         videoCheck->setChecked(true);
+             openVideoFilesFolder(&videoList);
+             openLogFilesFolder(&logList);
+             isFolderOpened = true;
+             ////qDebug()() << videoList;
+        }
+        if((VideoFileError==0)&(LogFileError==0))
+        {
+            setButtonPanelEnabled(true);
 
+        }
     }
+    accepted = false;
 }
 void MainWindow::selectLogFolder()
 {
-    QString logdir = QFileDialog::getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
-
-
-    if(checkLogFilesExistance(logdir)==0)//if no .alg files found show error
+    QString logdir = "";
+    QFileDialog dlg;//(this, tr("Выбор директории файлов регистратора"));
+//    dlg.setOption(QFileDialog::ShowDirsOnly,true);
+    logdir = dlg.getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
+    qDebug() << "logdir" << logdir;
+//            ::getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
+    if(logdir!= "")
     {
-        newMessage.setWindowTitle("Ошибка!");
-        newMessage.setText("В выбранной вами папке лог-файлов не обнаружено! Пожалуйста, попробуйте еще раз.");
-        newMessage.exec();
-        LogFileError = 2;
-    }
-    else                        //else do all the next things
-    {
-        logWorkingDir = logdir;
-        videoWorkingDir = logdir;
-        ////qDebug()() << logWorkingDir;
-//        ui->lineEdit_2->setText(logWorkingDir);
-//        ui->lineEdit->setText(logWorkingDir);
-//        logCheck->setChecked(true);
-//        videoCheck->setChecked(true);
-        LogFileError = 0;
-        isFolderOpened = true;
-    }
-    if((VideoFileError==0)&(LogFileError==0))
-    {
-        setButtonPanelEnabled(true);
+        accepted = true;
+        //logdir = dlg.getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
+        if(checkLogFilesExistance(logdir)==0)//if no .alg files found show error
+        {
+            newMessage.setWindowTitle("Ошибка!");
+            newMessage.setText("В выбранной вами папке лог-файлов не обнаружено! Пожалуйста, попробуйте еще раз.");
+            newMessage.exec();
+            LogFileError = 2;
+        }
+        else                        //else do all the next things
+        {
+            logWorkingDir = logdir;
+            videoWorkingDir = logdir;
+            ////qDebug()() << logWorkingDir;
+    //        ui->lineEdit_2->setText(logWorkingDir);
+    //        ui->lineEdit->setText(logWorkingDir);
+    //        logCheck->setChecked(true);
+    //        videoCheck->setChecked(true);
+            LogFileError = 0;
+            isFolderOpened = true;
+        }
+        if((VideoFileError==0)&(LogFileError==0))
+        {
+            setButtonPanelEnabled(true);
 
+        }
     }
 }
 
@@ -1552,16 +1568,16 @@ void MainWindow::updateTime()//i don't like this func
 //    delayMs = 0;
 //    mythread->start();
 //    mutex.lock();
+    ui->timeEdit->setTime(QDateTime::fromTime_t(timeCells[ui->tableWidget->currentColumn()].beginTime+delayMs/100).toUTC().time());
     tickCounter++;
-    if((ui->horizontalSlider->value()>=ui->horizontalSlider->maximum())&(ui->horizontalSlider->maximum()>1))//&(value!=lastVal))
+    if((ui->horizontalSlider->value()>=ui->horizontalSlider->maximum())&(ui->horizontalSlider->maximum()>0))//&(value!=lastVal))
     {
         if(!isSliderPressed)
         {
             ui->horizontalSlider->setEnabled(false);
             ui->horizontalSlider->setValue(0);
             ui->horizontalSlider->releaseMouse();
-
-    //        ui->horizontalSlider->blockSignals(true);
+            ui->horizontalSlider->blockSignals(true);
             qDebug() << "get next segment here" << delayMs;
             moveToNextTimeFrame();
             ui->horizontalSlider->setEnabled(true);
@@ -1569,13 +1585,14 @@ void MainWindow::updateTime()//i don't like this func
         else
             qDebug() << "delay" << delayMs;
     }
+//    qDebug()<<"inverseTime"<<inverseTime;
     if(!videoOnly)
         delayMs++;
     if(delayMs >= maxCamOffset)
     {
 
     }
-//    qDebug() << videoOnly;
+    //qDebug() << delayMs;
     int currentDelayMs = delayMs;
     if(currentDelayMs%100==0)//second passed
     {
@@ -1586,9 +1603,10 @@ void MainWindow::updateTime()//i don't like this func
         if(!videoOnly)
         {
             dataParams *tmpDP = new dataParams;
-            lastRecNum = getRecordNumClosestToTime(dataMap[pageIndex].timeEdge1+(int)currentDelayMs/100,0,0);
+            lastRecNum = getRecordNumClosestToTime(/*dataMap[pageIndex].timeEdge1*/timeCells[ui->tableWidget->currentColumn()].beginTime+(int)currentDelayMs/100,0,0);
             makeStructFromRecord(log->record,tmpDP);
             updateThermos(*tmpDP);
+
         }
 
 //        qDebug() << delayMs;
@@ -1596,15 +1614,18 @@ void MainWindow::updateTime()//i don't like this func
     }
     else if(currentDelayMs%10==0)
     {
-
+        correctFramePosition();
+        //if(ui->tableWidget->currentColumn()==ui->tableWidget->columnCount()-1)
+//        qDebug() << "pos3";
+        correctCellSeekerPosition(((float)(delayMs/100)/(timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime))*ui->tableWidget->width());
         if(!videoOnly)
         {
             dataParams *tmpDP = new dataParams;
             ui->horizontalSlider->setValue((int)currentDelayMs/100);
             if(ui->horizontalSlider->value()==0)
-                lastRecNum = getRecordNumClosestToTime(dataMap[pageIndex].timeEdge1+(int)currentDelayMs/100,beginTimeFract,0);//we need to define timeFract here
+                lastRecNum = getRecordNumClosestToTime(/*dataMap[pageIndex].timeEdge1*/timeCells[ui->tableWidget->currentColumn()].beginTime+(int)currentDelayMs/100,/*beginTimeFract*/0,0);//we need to define timeFract here
             else
-                lastRecNum = getRecordNumClosestToTime(dataMap[pageIndex].timeEdge1+(int)currentDelayMs/100,(int)((currentDelayMs%100)*2.56),0);//we need to define timeFract here
+                lastRecNum = getRecordNumClosestToTime(/*dataMap[pageIndex].timeEdge1*/timeCells[ui->tableWidget->currentColumn()].beginTime+(int)currentDelayMs/100,(int)((currentDelayMs%100)*2.56),0);//we need to define timeFract here
     //        //qDebug() <<"current timefract" << delayMs%100;
             makeStructFromRecord(log->record,tmpDP);
             updateThermos(*tmpDP);
@@ -1625,11 +1646,15 @@ int MainWindow::updateThermos(dataParams dp)
 //    qDebug() << "update thermos";
     for(int i = 0; i < dp.doubleTypes.size(); i++)
     {
+//        correctFramePosition();
         parameterBar[i]->setValue(dp.doubleTypes[i]);
+//        correctFramePosition();
+
         thermoVals[i]->setText(QString::number(dp.doubleTypes[i],10,2));
+//        correctFramePosition();
 //        qDebug() << thermoVals[i]->text();
     }
-//    correctFramePosition();
+
     return 0;
 }
 
@@ -1639,6 +1664,13 @@ int MainWindow::getRecordNumClosestToTime(time_t currentTime, int timeFract, int
 //    log->selectLogFile()
 //    qDebug() << log->getLogFileName();
 //    qDebug()<< QDateTime::fromTime_t(currentTime);
+//    qDebug() << "current time" << currentTime;
+  //  qDebug() << QDateTime::fromTime_t(currentTime);
+//     qDebug() << QDateTime::fromTime_t(currentTime).toUTC();
+   // qDebug() << "current UTC time" << currentTime;
+//    qDebug() << "inverse time" << inverseTime;
+//    qDebug() << "last record" << lastRecord;
+//     currentTime = currentTime - 14400;
     long tmpErr = log->selectSegment(bigTableID);
     int recIndex=0;
     bool timeFractSearchFlag = false;
@@ -1676,7 +1708,7 @@ int MainWindow::getRecordNumClosestToTime(time_t currentTime, int timeFract, int
                              case 10 :
                              {
                                  recTime = (time_t)interpreter->fieldInt(&log->record[recIndex]);
-                                 recTime = mktime(gmtime(&recTime));
+//                                 recTime = mktime(gmtime(&recTime));
 
                                  if(interpreter->TInterpItemArray[i].name!="PowOnTime")
                                  {
@@ -1693,15 +1725,20 @@ int MainWindow::getRecordNumClosestToTime(time_t currentTime, int timeFract, int
                                          if(inverseTime)
                                          {
                                             if(currentTime>recTime)
+                                            {
+//                                                qDebug() << "out index"<<index;
                                                  return index;
+                                            }
 
                                          }
                                          else
                                          {
 
                                              if(currentTime<recTime)
+                                             {
+//                                                 qDebug() << "out index"<<index;
                                                  return index;
-
+                                             }
                                          }
                                      }
 
@@ -1746,6 +1783,7 @@ int MainWindow::getRecordNumClosestToTime(time_t currentTime, int timeFract, int
                      }
                  }
         }
+//        qDebug() << QDateTime::fromTime_t(recTime).toUTC();
     }
 
     return -1;
@@ -1754,6 +1792,7 @@ int MainWindow::getRecordNumClosestToTime(time_t currentTime, int timeFract, int
 int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, unsigned char *beginTimeFract, unsigned char *endTimeFract,int globalIterator)
 {
     qDebug() << "WTF?";
+//    logEndTimes.clear();
     int tmpErr = log->selectSegment(camOffsetsTableID);
     qDebug() << "WTF??!";
     int timeIndex=0; // 0=Time; 1 = StartTime; 2 = ShutdownTime;
@@ -1769,7 +1808,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                 qDebug() << "WTF??";
                 for(int i =0; i <interpreter->interpreterRecordsCount; i++)
                 {
-
+                    qDebug() << "name" << i << interpreter->TInterpItemArray[i].name;
                     if(interpreter->TInterpItemArray[i].typ==4)
                     {
                         if(ui->comboBox->count()<11)
@@ -1840,7 +1879,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                                     if(timeIndex==0)
                                     {
                                         *beginTime = (time_t)tmpVal;
-                                        qDebug() << QDateTime::fromTime_t(*beginTime);
+                                        qDebug() <<"begin time" <<QDateTime::fromTime_t(*beginTime).toUTC();
                                     }
                                     if(timeIndex==1)
                                              qDebug() << QDateTime::fromTime_t((time_t)tmpVal);       //we need here something like global variable StartTime
@@ -1891,6 +1930,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                                         qDebug() << "video time"<<currentval;
                                         timeFracts.append(tmp);
                                         vplayer->stop();
+                                        correctFramePosition();
                                     }
                                         else
                                         videoTimes.append(0);
@@ -1980,7 +2020,9 @@ int MainWindow::readTimeEdges(time_t *beginTime, time_t *endTime/*, unsigned cha
                              case 10 :
                              {
                                  recTime = (time_t)interpreter->fieldInt(&log->record[recIndex]);
-                                 recTime = mktime(gmtime(&recTime));
+                                 qDebug() << "LOG TIME EDGES" << QDateTime::fromTime_t(recTime).toUTC();
+//                                 recTime = mktime(gmtime(&recTime));
+                                 qDebug() << "LOG TIME EDGES" << QDateTime::fromTime_t(recTime).toUTC();
                                  if(interpreter->TInterpItemArray[i].name!="PowOnTime")
                                  {
                                      //check time going direction
@@ -2031,6 +2073,7 @@ int MainWindow::openLogFilesFolder( QStringList *listOfLogs)
 {
 //    QFile fileToOpen;
     ui->progressBar->setVisible(true);
+    correctFramePosition();
     ui->mainToolBar->setEnabled(false);
     ui->progressBar->setValue(0);
     listOfLogs->clear();
@@ -2048,6 +2091,7 @@ int MainWindow::openLogFilesFolder( QStringList *listOfLogs)
     int algCounter = 0;
     list = filesDir.entryList(QDir::Files,QDir::Type);
     ui->progressBar->setMaximum(list.size()-1);
+
     for(int i = 0; i<list.size() ; i++)
     {
         if(list.at(i).indexOf(".alg")!=-1)
@@ -2059,6 +2103,7 @@ int MainWindow::openLogFilesFolder( QStringList *listOfLogs)
         ui->progressBar->setValue(i);
     }
     ui->progressBar->setVisible(false);
+    correctFramePosition();
     ui->mainToolBar->setEnabled(true);
 //    //qDebug() << listOfLogs;
 
@@ -2072,6 +2117,7 @@ int MainWindow::openVideoFilesFolder(QStringList *listOfVideos)
     ui->mainToolBar->setEnabled(false);
     ui->progressBar->setMinimum(0);
     ui->progressBar->setVisible(true);
+    correctFramePosition();
     ui->progressBar->setValue(0);
     QString pathToFileDir = videoWorkingDir;
     ////qDebug()() << videoWorkingDir;
@@ -2107,6 +2153,7 @@ int MainWindow::openVideoFilesFolder(QStringList *listOfVideos)
         //qDebug() << listOfVideos->at(i);
 //    ////qDebug()() << "sortedlist" << listOfVideos;
     ui->progressBar->setVisible(false);
+    correctFramePosition();
     ui->mainToolBar->setEnabled(true);
     return 0;
 }
@@ -2283,6 +2330,7 @@ int MainWindow::readHeadTableData()//here we read head table - its header and it
                 for(int i =0; i <interpreter->interpreterRecordsCount; i++)
                 {
 
+                    qDebug() << "name1" << i << interpreter->TInterpItemArray[i].name;
                     if(interpreter->TInterpItemArray[i].level!=0)
                     {
 //                            verticalHeaderName = QString::fromLocal8Bit(interpreter->TInterpItemArray[i].name);
@@ -2445,10 +2493,13 @@ void MainWindow::on_action_triggered()
     logList.clear();
     if(!isFolderOpened)
     {
+
        selectLogFolder();
        selectVideoFolder();
 //       setButtonsEnable(true);
     }
+    else
+        qDebug() << "we gotta error here!";
     openLogFilesFolder(&logList);
     openVideoFilesFolder(&videoList);
      qSort(logList.begin(),logList.end());
@@ -2488,6 +2539,17 @@ void MainWindow::createCellVector()
             qDebug() << "cycle number" << i;
             int colorcounter=0;
             int tmpMax = 0;
+            tmpGrayLength=0;
+            tmpGreenLength=0;
+            tmpWhiteLength=0;
+            tmpTimeCell=0;
+            tc.beginTime=0;
+            tc.cellType=0;
+            tc.colWidth=0;
+            tc.currentPage=0;
+            tc.donor=0;
+            tc.endTime=0;
+            tc.relativeWidth=0;
 
             for(int a = 0; a < dataMap[i].videoTimeEdges.size();a++)
             {
@@ -2530,7 +2592,9 @@ void MainWindow::createCellVector()
                 {
                     redFlag = true;
                     b = dataMap[i].camTimeOffsets.size();
-//                    qDebug() << "redflag appears";
+                    qDebug() << "gray length" << tmpGrayLength;
+                    //qDebug() << "gray length" << tmpGrayLength;
+                    qDebug() << "redflag appears";
                 }
 
             }
@@ -2542,7 +2606,7 @@ void MainWindow::createCellVector()
 //                QMapIterator <QString, bool> Iter(dataMap[i].videoVector);
                 float tmplength = (float)tmpGreenLength/totalWidth;
                 tc.colWidth = ui->tableWidget->width()*(tmplength);
-
+               // qDebug() << "redflag" << redFlag << "celltype"<< tc.cellType;
                 if(!redFlag)
                     tc.cellType = 0;
                 else
@@ -2554,8 +2618,9 @@ void MainWindow::createCellVector()
                 k++;
 
             }
-            if(tmpGrayLength>0)
+            if(tmpGrayLength>1)
             {
+
                 tc.donor = 0;
                 tc.beginTime = dataMap[i].timeEdge1+tmpGreenLength;
                 tc.endTime = tc.beginTime+tmpGrayLength;
@@ -2568,11 +2633,12 @@ void MainWindow::createCellVector()
                     tc.cellType = 3;
                 tc.relativeWidth = tmplength;
                 tc.currentPage = i;
-                timeCells.append(tc);
+                if(redFlag)
+                    timeCells.append(tc);
                 k++;
 
             }
-            if(tmpWhiteLength>0)
+            if(tmpWhiteLength>1)
             {
                 tc.donor = 0;
                 tc.beginTime = dataMap[i].timeEdge1+tmpGreenLength+tmpGrayLength;
@@ -2603,7 +2669,7 @@ void MainWindow::createCellVector()
         qDebug() << "current page" <<timeCells[a].currentPage;
         qDebug() << "relative width" <<timeCells[a].relativeWidth;
         qDebug() << "column width" << timeCells[a].colWidth;
-        if(timeCells[a].colWidth<1)
+        if((timeCells[a].colWidth<1)&(timeCells[a].cellType!=1))
             acceptorCounts++;
         else if(timeCells[a].colWidth>5)
         {
@@ -2657,6 +2723,7 @@ void MainWindow::on_pushButton_clicked()
     {
 //        videoOnly = false;
 //        openLogFile(videoList.at(0));
+        dataMap.clear();
         videoTimeGlobalIterator=0;
         createDataMap();
         qDebug() << "DATA MAP CREATED!!!";
@@ -2690,11 +2757,13 @@ void MainWindow::on_pushButton_clicked()
 
         }
         createCellVector();
+        qDebug() <<"VERY BEGIN TIME" << QDateTime::fromTime_t(timeCells[0].beginTime).toUTC();
         initColoredScale();
-
+        qDebug() << "WIDTH OF TABLE" << ui->tableWidget->width();
+        qDebug() << "WIDTH OF SCALE" << ui->ScaleWidget->width();
         qDebug() << "column widthes";
-        for(int a = 0; a < pageVector.size();a++)
-            qDebug() << ui->tableWidget->columnWidth(a);
+//        for(int a = 0; a < pageVector.size();a++)
+//            qDebug() << ui->tableWidget->columnWidth(a);
         QDir dir;
         qint64 totalsize = 0;
         int videoCounter=0, logCounter = 0;
@@ -2719,7 +2788,7 @@ void MainWindow::on_pushButton_clicked()
             }
         }
         QVariant tmpvc = videoCounter, tmpvl = logCounter;
-        QDateTime beging = QDateTime::fromTime_t(dataMap[0].timeEdge1), end = QDateTime::fromTime_t(dataMap[dataMap.size()-1].timeEdge2);
+        QDateTime beging = QDateTime::fromTime_t(timeCells[0].beginTime).toUTC(), end = QDateTime::fromTime_t(timeCells[timeCells.size()-1].endTime).toUTC();//QDateTime::fromTime_t(dataMap[0].timeEdge1), end = QDateTime::fromTime_t(dataMap[dataMap.size()-1].timeEdge2);
 //        qDebug() <<"mysize" <<tmpDir.;
         qDebug() << dir.path();
 //        qDebug() << "total size" << totalsize;
@@ -2729,16 +2798,17 @@ void MainWindow::on_pushButton_clicked()
 //        qDebug()<<ui->tableWidget_3->rowCount();
 //        qDebug()<<ui->tableWidget_3->columnCount();
 //        QDateTime sometime = QDateTime::fromTime_t(0);
-        if(end.daysTo(beging)<0)
-        {
-            newMessage.setWindowTitle("Внимание!");
-            newMessage.setText("Что-то случилось со временем! Оно идет назад!!!");
-            newMessage.exec();
-        }
+//        if(end.daysTo(beging)<0)
+//        {
+//            newMessage.setWindowTitle("Внимание!");
+//            newMessage.setText("Что-то случилось со временем! Оно идет назад!!!");
+//            newMessage.exec();
+//        }
+        qDebug() << beging.daysTo(end);
         ui->tableWidget_3->setItem(0,0, new QTableWidgetItem);
         ui->tableWidget_3->item(0,0)->setText(QString::number(totalsize/1048576,10));
         ui->tableWidget_3->setItem(1,0, new QTableWidgetItem);
-        ui->tableWidget_3->item(1,0)->setText(QString::number(beging.daysTo(end),10)+" дн. "+QDateTime::fromTime_t(dataMap[dataMap.size()-1].timeEdge2 - dataMap[0].timeEdge1-86400*beging.daysTo(end)).time().toString());
+        ui->tableWidget_3->item(1,0)->setText(QString::number(beging.daysTo(end),10)+" дн. "+QDateTime::fromTime_t(dataMap[dataMap.size()-1].timeEdge2 - dataMap[0].timeEdge1-86400*beging.daysTo(end)).toUTC().time().toString());
         ui->tableWidget_3->setItem(2,0, new QTableWidgetItem);
         ui->tableWidget_3->item(2,0)->setText(tmpvc.toString());
         ui->tableWidget_3->setItem(3,0, new QTableWidgetItem);
@@ -2758,10 +2828,13 @@ void MainWindow::on_pushButton_clicked()
         }
         createFakeTimeScale(0);
         initThermoNames(&thNames);
+        qDebug() << thNames;
         initSmallThermos(initThermoMaxs(&thMaxs),thNames,thMaxs);
 //        initBigThermos(2);
-        ui->comboBox->setCurrentIndex(1);
-        ui->comboBox_2->setCurrentIndex(2);
+        ui->comboBox->removeItem(0);
+        ui->comboBox_2->removeItem(0);
+        ui->comboBox->setCurrentIndex(0);
+        ui->comboBox_2->setCurrentIndex(1);
         openVideoFile(videoList[0],videoList[1]);
         flowingOffset = 300;
         delayMs = (vplayer->_player->time()+flowingOffset + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
@@ -2771,7 +2844,7 @@ void MainWindow::on_pushButton_clicked()
         //qDebug() << "start delayMs2" << delayMs;
         updateTime();
         dataParams *tmpDP = new dataParams;
-        getRecordNumClosestToTime(dataMap[pageIndex].timeEdge1+(int)delayMs/100,(int)((delayMs%100)*2.56),0);
+        getRecordNumClosestToTime(/*dataMap[pageIndex].timeEdge1*/timeCells[ui->tableWidget->currentColumn()].beginTime+(int)delayMs/100,(int)((delayMs%100)*2.56),0);
         makeStructFromRecord(log->record,tmpDP);
         updateThermos(*tmpDP);
         flowingOffset = 0;
@@ -2782,17 +2855,18 @@ void MainWindow::on_pushButton_clicked()
     {
 //        videoOnly = true;
         createFakeTimeScale(0);
-        ui->comboBox->setCurrentIndex(1);
-        ui->comboBox_2->setCurrentIndex(2);
+        ui->comboBox->removeItem(0);
+        ui->comboBox_2->removeItem(0);
+        ui->comboBox->setCurrentIndex(0);
+        ui->comboBox_2->setCurrentIndex(1);
         openVideoFile(videoList[0],videoList[1]);
-        ui->horizontalSlider->installEventFilter(this);
+//        ui->horizontalSlider->installEventFilter(this);
         setButtonsEnable(true);
         //qDebug() << "not opened log files";
         //qDebug() <<"size in here" <<logList.size();
     }
     //qDebug() << "current vplayer state is" << vplayer->_player->state();
-    ui->comboBox->removeItem(0);
-    ui->comboBox_2->removeItem(0);
+
 //     vplayer->_player->pause();
 //     vplayer2->_player->pause();
 //     while(vplayer->_player->state()!=4){}
@@ -2811,6 +2885,7 @@ void MainWindow::on_pushButton_clicked()
             mythread->start();
             ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
         }
+        readyToPlay = true;
 //        if(mythread->isFinished())
 //            mythread->start();
 }
@@ -3007,6 +3082,17 @@ int MainWindow::createDataMap()
     qDebug() << "starting create data map";
     for(int i = 0; i < timeSegment.size()/2;i++)
     {
+        tmpPage.camOffsetAmount=0;
+        tmpPage.camTimeOffsets.clear();
+        tmpPage.logName ="";
+        tmpPage.logTimeEdge2=0;
+        tmpPage.timeEdge1=0;
+        tmpPage.timeEdge2=0;
+        tmpPage.TimeFract1=0;
+        tmpPage.TimeFract2=0;
+        tmpPage.videoTimeEdges.clear();
+        tmpPage.videoVector.clear();
+
         tmpPage.timeEdge1 = timeSegment.at(i*2);
         qDebug() << tmpPage.timeEdge1;
         if(i<timeSegment.size()/2-1)
@@ -3068,7 +3154,9 @@ int MainWindow::createDataMap()
 //    qDebug() <<"maximal progress bar value is"<< ui->progressBar_2->maximum();
     ui->horizontalSlider->setEnabled(true);
     ui->line->raise();
-    qDebug() << "data map successfully created";
+    qDebug() << "data map successfully created";\
+    timeSegment.clear();
+    videoTimeGlobalIterator=0;
     return 0;
 }
 
@@ -3096,7 +3184,8 @@ int MainWindow::openVideoFile(QString filename1, QString filename2)
         if(filetocheck.size()>10000)
         {
             result1 = vplayer->openLocal(videoWorkingDir+"/"+playingFile1);
-            //qDebug() <<"opening1 result" << result1;
+            correctFramePosition();
+           qDebug() <<"opening1 result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << result1;
 
 //            while(vplayer->_player->state()!=3){}
 //                vplayer->_player->pause();
@@ -3128,7 +3217,8 @@ int MainWindow::openVideoFile(QString filename1, QString filename2)
         if(filetocheck.size()>10000)
         {
             result2 = vplayer2->openLocal(videoWorkingDir+"/"+playingFile2);
-            //qDebug() <<"opening2 result" <<result2;
+            correctFramePosition();
+            qDebug() <<"opening2!!!!!!!!!!!!!!!!!!!!!! result" <<result2;
 //            while(vplayer2->_player->state()!=3){}
 //            vplayer2->_player->pause();
             vplayer2->_player->setTime(maxCamOffset - dataMap[pageIndex].camTimeOffsets.at(ui->comboBox_2->currentIndex()));
@@ -3294,6 +3384,7 @@ int MainWindow::changeVideo1(QString filename)
    if(ui->comboBox->currentIndex()!=0)
    {
         vplayer->stop();
+        correctFramePosition();
         vplayer2->_player->pause();
         playingFile1 = filename;
 //        while(vplayer->_player->state()!=5){}
@@ -3305,8 +3396,7 @@ int MainWindow::changeVideo1(QString filename)
         //qDebug() << "some size from here" << filetocheck.size();
         if(filetocheck.size()>10000)
         {
-        result1 = vplayer->openLocal(videoWorkingDir+"/"+playingFile1);
-
+//            result1 = vplayer->openLocal(videoWorkingDir+"/"+playingFile1);
         }
         else result1 = 2;
    }
@@ -3321,6 +3411,7 @@ int MainWindow::changeVideo2(QString filename)
    if(ui->comboBox_2->currentIndex()!=0)
    {
         vplayer2->stop();
+        correctFramePosition();
         vplayer->_player->pause();
         playingFile2 = filename;
 //        isVideo2Opened = false;
@@ -3335,7 +3426,7 @@ int MainWindow::changeVideo2(QString filename)
         //qDebug() << "some size from here" << filetocheck.size();
         if(filetocheck.size()>10000)
         {
-        result2 = vplayer2->openLocal(videoWorkingDir+"/"+playingFile2);
+//        result2 = vplayer2->openLocal(videoWorkingDir+"/"+playingFile2);
 //        while(vplayer2->_player->state()!=3){}
 //            vplayer2->_player->pause();
 //        while(vplayer->_player->state()!=3){}
@@ -3432,6 +3523,7 @@ void MainWindow::video1Ended()
     //        isVideo1Opened = false;
     //        isVideo2Opened = false;
             openVideoFile(videoList[index1+ui->comboBox->count()-1],videoList[index2+ui->comboBox->count()-1]);
+            qDebug() << "VIDEO HAS CHANGED";
     //        vplayer2->moveToTime(vplayer->getCurrentTime());
         }
         playersStatesSynchronized = true;
@@ -3474,6 +3566,7 @@ void MainWindow::video2Ended()
     //        isVideo1Opened = false;
     //        isVideo2Opened = false;
             openVideoFile(videoList[index1+ui->comboBox->count()-1],videoList[index2+ui->comboBox->count()-1]);
+             qDebug() << "VIDEO HAS CHANGED";
     //        vplayer2->moveToTime(vplayer->getCurrentTime());
         }
         playersStatesSynchronized = true;
@@ -3543,9 +3636,15 @@ void MainWindow::on_stopButton_clicked()
 #ifdef GLOBALMODE
 //    vplayer->pause();
 //    vplayer2->pause();
+    logWorkingDir = "";
+    videoWorkingDir = "";
+    ui->line->setVisible(false);
+    ui->line_2->setVisible(false);
+    ui->line_3->setVisible(false);
+    ui->line_4->setVisible(false);
+    ui->ScaleWidget->setVisible(false);
     ui->horizontalSlider->setEnabled(false);
 //    ui->ScaleWidget->close();
-
     ui->playButton->click();
     vplayer->stop();
     vplayer2->stop();
@@ -3572,7 +3671,7 @@ void MainWindow::on_stopButton_clicked()
     if(!videoOnly)
     {
         dataParams *tmpDP = new dataParams;
-        getRecordNumClosestToTime(dataMap[pageIndex].timeEdge1+(int)delayMs/100,(int)((delayMs%100)*2.56),0);
+        getRecordNumClosestToTime(/*dataMap[pageIndex].timeEdge1*/timeCells[ui->tableWidget->currentColumn()].beginTime+(int)delayMs/100,(int)((delayMs%100)*2.56),0);
         makeStructFromRecord(log->record,tmpDP);
         updateThermos(*tmpDP);
     }
@@ -3585,7 +3684,7 @@ void MainWindow::on_stopButton_clicked()
 
 //    parameterBar.clear();
     isFolderOpened = false;
-
+    accepted = false;
 //    this->update();
     ui->comboBox->blockSignals(true);
     ui->comboBox_2->blockSignals(true);
@@ -3599,8 +3698,28 @@ void MainWindow::on_stopButton_clicked()
     dataMap.clear();
     timeCells.clear();
     videoList.clear();
+    //if(dataMap.size()!=0)
+    qDebug() << timeCells.size();
+        qDebug()<<dataMap.size();
+
+    for(int a = 0 ; a< ui->tableWidget->columnCount(); a++)
+        ui->tableWidget->removeColumn(0);
+    ui->tableWidget->clear();
+    qDebug() << ui->tableWidget->columnCount();
+//    ui->ScaleWidget->
+
+            QwtScaleDraw *resetScale = new QwtScaleDraw;
+//            resetScale->setTimeArr(0,0);
+            resetScale->setLabelAlignment(Qt::AlignRight);
+            ui->ScaleWidget->setScaleDraw(resetScale);
+            ui->ScaleWidget->setContentsMargins(0,0,0,0);//leveling scale labels alignment balance
+//            QwtScaleTransformation *tr= new QwtScaleTransformation(QwtScaleTransformation::Linear);
+//            ui->ScaleWidget->setScaleDiv(tr,0);
+//    ui->ScaleWidget->clearMask();
+//    delete mapTimeScale;
     logList.clear();
     camOffsets.clear();
+    logEndTimes.clear();
     pageIndex = 0;
     for(int i =0; i < ui->gridLayout_2->count(); i++)
     {
@@ -3668,7 +3787,7 @@ void MainWindow::on_timeEdit_userTimeChanged(const QTime &time)
 void MainWindow::on_nextTimeSegment_clicked()
 {
 
-    if(ui->tableWidget->currentColumn()<ui->tableWidget->columnCount())
+    if(ui->tableWidget->currentColumn()<ui->tableWidget->columnCount()-1)
     {
         ui->tableWidget->setCurrentCell(0,ui->tableWidget->currentColumn()+1);
          moveToAnotherTimeSegment(ui->tableWidget->currentColumn());
@@ -3708,7 +3827,7 @@ void MainWindow::on_nextTimeSegment_clicked()
 //            mythread->start();
 //            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 //        }
-
+correctFramePosition();
 }
 
 #ifdef GLOBALMODE
@@ -3731,8 +3850,8 @@ void MainWindow::setVideoTime()//its my handmade slot
 
     if(!videoOnly)
     {
-        if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
-        {
+//        if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
+//        {
             time =  vplayer->getCurrentTime();
             outtime.setHMS(h,m,s,ms);
             currentVideoTime =(vplayer->_player->time() + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
@@ -3748,7 +3867,7 @@ void MainWindow::setVideoTime()//its my handmade slot
             logVideoDeltaCounter++;
             tickCounter = delayMs%50;
             lastDelay = delayMs;
-        }
+//        }
 //        else
 //        {
 //            logVideoDeltaCounter++;
@@ -3848,6 +3967,7 @@ void MainWindow::on_previousTimeSegment_clicked()
 //            mythread->exit();
 
 //    }
+    correctFramePosition();
 }
 
 void MainWindow::on_horizontalSlider_valueChanged(int value)
@@ -3892,9 +4012,13 @@ void MainWindow::on_action_4_triggered()
         selectVideoFolder();
 
     }
+    else
+        qDebug() << "we gotta error here!";
     this->setWindowTitle(logWorkingDir);
-    qDebug() << "before run start";
-    ui->pushButton->click();
+    qDebug() << logWorkingDir;
+    qDebug() << "before run start!";
+    if(logWorkingDir!="")
+        ui->pushButton->click();
 //    qDebug() << "at end of opening player has state" << vplayer->_player->state();
 //    qDebug() << "at end of opening  player2 has state" << vplayer2->_player->state();
 
@@ -3902,116 +4026,55 @@ void MainWindow::on_action_4_triggered()
 //        setButtonsEnable(true);
 }
 
+
 void MainWindow::on_comboBox_2_currentIndexChanged(int index)
 {
     int tmp1=0,tmp2=0;
 //    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
-
-    ////qDebug()() << "combo2" << index;
-    qDebug() << "index of combobox2 changed";
-    if(index==ui->comboBox->currentIndex())
+//    if(timeCells[ui->tableWidget->currentColumn()].currentPage!=pageIndex)
+//    {
+    if(readyToPlay)
     {
-        if(index==ui->comboBox->count()-1)
-            ui->comboBox_2->setCurrentIndex(index-1);
-        else
-            ui->comboBox_2->setCurrentIndex(index+1);
-    }
-//    ////qDebug()()<< vplayer2->getCurrentMediaLocation();
-//    if(vplayer->_media->currentLocation())
-    if(isVideo1Opened|isVideo2Opened)
-    {
-//        vplayer->_player->pause();
-//        vplayer2->_player->pause();
-//        while(vplayer->_player->state()!=4){}
-//        while(vplayer2->_player->state()!=4){}
-//        if(ui->comboBox_2->currentIndex()!=0)
-//        {
-//            int videoListIndex=0;
-//            for(int i = 0; i < videoList.size(); i++)
-//            {
-//                if(videoList[i]==playingFile2)
-//                    videoListIndex=i;
-//        //        if(videoList[i]==playingFile2)
-//        //            index2=i;
+        pageIndex = timeCells[ui->tableWidget->currentColumn()].currentPage;
+        QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
 
-//            }
-//            //qDebug() << "videolistIndex" << videoListIndex;
-//            vplayer->_player->togglePause();
-//            vplayer2->_player->togglePause();
-//            ////qDebug()() << "index1_changed"<< videoListIndex;
-//            int tmpPosOfMkv = playingFile2.indexOf(".mkv");
-//            ////qDebug()() << "index of .mkv"<< tmpPosOfMkv;
-//            int beforeindex = (int)playingFile2.toLocal8Bit()[tmpPosOfMkv-1]-0x30;
-//            //qDebug() << "beforeindex" << beforeindex;
-//            int deltaindex =  ui->comboBox_2->currentIndex()- getBeforeIndex(beforeindex);
-//            //qDebug() <<"deltaindex" <<deltaindex;
-//            int tmptime = vplayer2->getCurrentTime()+camOffsets.at(lastIndex2-1) - camOffsets.at(index-1);
-//            //qDebug() << "player1 current time" << vplayer->_player->time();
-//            //qDebug() << "player2 current time" << vplayer2->_player->time();
-//            changeVideo2(videoList[videoListIndex+deltaindex]);
-//            isVideo2Opened = true;
-//            vplayer2->_player->setTime(tmptime);
+        ////qDebug()() << "combo2" << index;
+        qDebug() << "index of combobox2 changed"<< index;
+        if(index==ui->comboBox->currentIndex())
+        {
+            if(index==ui->comboBox->count()-1)
+                ui->comboBox_2->setCurrentIndex(index-1);
+            else
+                ui->comboBox_2->setCurrentIndex(index+1);
+        }
+    //    ////qDebug()()<< vplayer2->getCurrentMediaLocation();
+    //    if(vplayer->_media->currentLocation())
+        if(isVideo1Opened|isVideo2Opened)
+        {
 
-
-//        vplayer->_player->togglePause();
-//        vplayer2->_player->togglePause();
-//            int tmpPosOfMkv = playingFile1.indexOf(".mkv");
-//            ////qDebug()() << "index of .mkv"<< tmpPosOfMkv;
-//            int beforeindex = (int)playingFile1.toLocal8Bit()[tmpPosOfMkv-1]-0x30;
-//            ////qDebug()() << "beforeindex" << beforeindex;
-//            int deltaindex =  ui->comboBox->currentIndex()- getBeforeIndex(beforeindex);
-//            ////qDebug()() <<"deltaindex" <<deltaindex;
-        int tmptime = vplayer2->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);//!!
-        //qDebug() << "player1 current time" << vplayer->_player->time();
-        //qDebug() << "player2 current time" << vplayer2->_player->time();
-//            //qDebug() << "player2 tmptime" <<tmptime;
-//            //qDebug() << "player1 tmptime" << vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
-            while(tmp2<=ui->comboBox_2->currentIndex())
-            {
-                Iter2.next();
-                tmp2++;
-            }
-//                openVideoFile(Iter1.key(),Iter2.key());
-            if(vplayer->_player->state()==4)
-                vplayer->_player->togglePause();
-        vplayer2->openLocal(videoWorkingDir+"/"+Iter2.key());
-//               // openLogFile(dataMap[pageIndex].logName);
-//                if(mythread->isRunning())
-//                    mythread->exit();
-
-        isVideo2Opened = true;
-//            delayTimer->start(1);
-        vplayer2->_player->setTime(tmptime);
-//            vplayer->_player->togglePause();
-//            vplayer2->_player->togglePause();
-//            if(mythread->isFinished())
-//                mythread->start();
-        if(mythread->isRunning())
-            mythread->exit();
-//            vplayer2->_player->togglePause();
-//            vplayer->_player->togglePause();
+            int tmptime = vplayer2->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);//!!
+                 while(tmp2<=ui->comboBox_2->currentIndex())
+                {
+                    Iter2.next();
+                    tmp2++;
+                }
+                if(vplayer->_player->state()==4)
+                    vplayer->_player->togglePause();
+            vplayer2->openLocal(videoWorkingDir+"/"+Iter2.key());
+            isVideo2Opened = true;
+            vplayer2->_player->setTime(tmptime);
             if(mythread->isRunning())
                 mythread->exit();
-            qDebug() << "player1 current state" << vplayer->_player->state();
-            qDebug() << "player2 current state" << vplayer2->_player->state();
-//            if(vplayer->_player->state()!=vplayer2->_player->state())
-//            {
-//                if(vplayer2->_player->state()==3)
-//                    vplayer->_player->play();
-//                else
-//                    vplayer->_player->pause();
-//            }
-
+                if(mythread->isRunning())
+                    mythread->exit();
+                qDebug() << "player1 current state" << vplayer->_player->state();
+                qDebug() << "player2 current state" << vplayer2->_player->state();
         }
-
-    lastIndex2 = index;
-//    else
-//    {
-//        ui->comboBox_2->setCurrentIndex(5-index);
-//    }
-
+        lastIndex2 = index;
+    }
 }
+
+
 int MainWindow::getBeforeIndex(int videoIndex)
 {
     if(videoIndex==0)
@@ -4039,74 +4102,78 @@ int MainWindow::getBeforeIndex(int videoIndex)
 
 void MainWindow::on_comboBox_currentIndexChanged(int index)
 {
-    ////qDebug()() << "combo" << index;
-    ///    pageIndex++;
-    int tmp1=0,tmp2=0;
-    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-//    vplayer->_player->pause();
-//    vplayer2->_player->pause();
-//    while(vplayer->_player->state()!=4){}
-//    while(vplayer2->_player->state()!=4){}
-//    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
-    qDebug() << "index of combobox1 changed";
-    if(index==ui->comboBox_2->currentIndex())
-    {
-        if(index==ui->comboBox->count()-1)
-            ui->comboBox->setCurrentIndex(index-1);
-        else
-            ui->comboBox->setCurrentIndex(index+1);
-    }
-    //qDebug() << "is video1 opened? -" << isVideo1Opened;
-    if(isVideo1Opened|isVideo2Opened)
-    {
-            int tmptime = vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
-            //qDebug() << "player1 current time" << vplayer->_player->time();
-            //qDebug() << "player2 current time" << vplayer2->_player->time();
-//            //qDebug() << "player2 tmptime" <<tmptime;
-//            //qDebug() << "player1 tmptime" << vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
-            while(tmp1<=ui->comboBox->currentIndex())
-            {
-                Iter1.next();
-                tmp1++;
-            }
-//            while(tmp2<ui->comboBox_2->currentIndex()=1)
-//                Iter2++;
-//                openVideoFile(Iter1.key(),Iter2.key());
-            if(vplayer2->_player->state()==4)
-                vplayer2->_player->togglePause();
-            vplayer->openLocal(videoWorkingDir+"/"+Iter1.key());
-//               // openLogFile(dataMap[pageIndex].logName);
-//                if(mythread->isRunning())
-//                    mythread->exit();
-            qDebug() << ui->comboBox->currentIndex();
-            qDebug() << Iter1.key();
-            isVideo1Opened = true;
-//            delayTimer->start(1);
-            vplayer->_player->setTime(tmptime);
-//            vplayer->_player->togglePause();
-//            vplayer2->_player->togglePause();
-//            if(mythread->isFinished())
-//                mythread->start();
-            if(mythread->isRunning())
-                mythread->exit();
-            //qDebug() << "player1 current time2" << vplayer->_player->time();
-            //qDebug() << "player2 current time2" << vplayer2->_player->time();
-//        }
-    }
-    lastIndex1 =index;
-//    if(vplayer->_player->state()!=4)
-//        vplayer->_player->pause();
-//    if(vplayer2->_player->state()!=4)
-//        vplayer2->_player->pause();
-    qDebug() << "player has state" << vplayer->_player->state();
-    qDebug() << "player2 has state" << vplayer2->_player->state();
-//    if(vplayer->_player->state()!=vplayer2->_player->state())
-//        vplayer->_player->togglePause();
 
-//    else
-//    {
-//        ui->comboBox->setCurrentIndex(5-index);
-//    }
+    int tmp1=0,tmp2=0;
+//    if(timeCells[ui->tableWidget->currentColumn()].currentPage!=pageIndex)
+    if(readyToPlay)
+    {
+        pageIndex = timeCells[ui->tableWidget->currentColumn()].currentPage;
+        QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+    //    vplayer->_player->pause();
+    //    vplayer2->_player->pause();
+    //    while(vplayer->_player->state()!=4){}
+    //    while(vplayer2->_player->state()!=4){}
+    //    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+        qDebug() << "index of combobox1 changed" << index;
+        if(index==ui->comboBox_2->currentIndex())
+        {
+            if(index==ui->comboBox->count()-1)
+                ui->comboBox->setCurrentIndex(index-1);
+            else
+                ui->comboBox->setCurrentIndex(index+1);
+        }
+        //qDebug() << "is video1 opened? -" << isVideo1Opened;
+        if(isVideo1Opened|isVideo2Opened)
+        {
+                int tmptime = vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
+                //qDebug() << "player1 current time" << vplayer->_player->time();
+                //qDebug() << "player2 current time" << vplayer2->_player->time();
+    //            //qDebug() << "player2 tmptime" <<tmptime;
+    //            //qDebug() << "player1 tmptime" << vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
+                while(tmp1<=ui->comboBox->currentIndex())
+                {
+                    Iter1.next();
+                    tmp1++;
+                }
+    //            while(tmp2<ui->comboBox_2->currentIndex()=1)
+    //                Iter2++;
+    //                openVideoFile(Iter1.key(),Iter2.key());
+                if(vplayer2->_player->state()==4)
+                    vplayer2->_player->togglePause();
+                vplayer->openLocal(videoWorkingDir+"/"+Iter1.key());
+    //               // openLogFile(dataMap[pageIndex].logName);
+    //                if(mythread->isRunning())
+    //                    mythread->exit();
+                qDebug() << ui->comboBox->currentIndex();
+                qDebug() << Iter1.key();
+                isVideo1Opened = true;
+    //            delayTimer->start(1);
+                vplayer->_player->setTime(tmptime);
+    //            vplayer->_player->togglePause();
+    //            vplayer2->_player->togglePause();
+    //            if(mythread->isFinished())
+    //                mythread->start();
+                if(mythread->isRunning())
+                    mythread->exit();
+                //qDebug() << "player1 current time2" << vplayer->_player->time();
+                //qDebug() << "player2 current time2" << vplayer2->_player->time();
+    //        }
+        }
+        lastIndex1 =index;
+    //    if(vplayer->_player->state()!=4)
+    //        vplayer->_player->pause();
+    //    if(vplayer2->_player->state()!=4)
+    //        vplayer2->_player->pause();
+        qDebug() << "player has state" << vplayer->_player->state();
+        qDebug() << "player2 has state" << vplayer2->_player->state();
+    //    if(vplayer->_player->state()!=vplayer2->_player->state())
+    //        vplayer->_player->togglePause();
+
+    //    else
+    //    {
+    //        ui->comboBox->setCurrentIndex(5-index);
+    //    }
+    }
 }
 
 void MainWindow::on_horizontalSlider_sliderMoved(int position)
@@ -4233,8 +4300,11 @@ void MainWindow::on_horizontalSlider_sliderReleased()
     isSliderPressed = false;
     mythread->start();
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-    vplayer->_player->play();
-    vplayer2->_player->play();
+    if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
+    {
+        vplayer->_player->play();
+        vplayer2->_player->play();
+    }
 }
 
 void MainWindow::on_horizontalSlider_sliderPressed()
@@ -4245,75 +4315,467 @@ void MainWindow::on_horizontalSlider_sliderPressed()
     vplayer->_player->pause();
     vplayer2->_player->pause();
 }
+void MainWindow::getDelayMsToSet(int pos,int totalTime)
+{
+    int tmpPos = 0;
+    int excessTime = 0;
+    bool lastCellFlag = false;
+    for(int i =0; i <= ui->tableWidget->columnCount(); i++)
+    {
+        if( i ==  ui->tableWidget->columnCount())
+        {
+            tmpPos = (((float)(timeCells[i-1].endTime-timeCells[0].beginTime)/totalTime))*ui->tableWidget->width();
+            lastCellFlag = true;
+          //  qDebug() << "last cell is" << i-1;
+        }
+        else
+            tmpPos = (((float)(timeCells[i].beginTime-timeCells[0].beginTime)/totalTime))*ui->tableWidget->width();
+        qDebug() << "pos" << pos;
+//        qDebug() << "tmpPos"<< tmpPos;
+//        qDebug() << "timeCells[i].beginTime" << timeCells[i].beginTime;
+//        qDebug() << "timeCells[0].beginTime" << timeCells[0].beginTime;
+        if(pos>=tmpPos)
+        {
+
+        }
+        else
+        {
+
+            if(i>=0)//freeze at selected i this position
+            {
+                if(i==0)
+                    qDebug()<< "ZEROOOO";
+                else
+                {
+                    excessTime = (((float)(pos-ui->tableWidget->columnViewportPosition(i-1))/ui->tableWidget->width()))*totalTime;
+                    if(ui->tableWidget->currentColumn()!=i-1)
+                    {
+                        moveToAnotherTimeSegment(i-1);
+                        ui->tableWidget->setCurrentCell(0,i-1);
+                    }
+                    qDebug() << "smth1";
+                    correctCellSeekerPosition(pos-ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn()));
+                    delayMsToSet = excessTime*100;
+
+                    i = ui->tableWidget->columnCount();
+                }
+            }
+            else if(i==0)
+            {
+
+                    excessTime = (((float)(pos-ui->tableWidget->columnViewportPosition(i))/ui->tableWidget->width()))*totalTime;
+                    if(ui->tableWidget->currentColumn()!=i)
+                         moveToAnotherTimeSegment(i);
+                    qDebug() << "pos1";
+                    //correctCellSeekerPosition((float)(pos/totalTime)*ui->tableWidget->width());
+                    delayMsToSet = excessTime*100;
+                    i = ui->tableWidget->columnCount();
+                    qDebug() << "ZERO POS";
+
+            }
+        }
+    }
+}
+void MainWindow::getCellAndTimeToMoveTo(int pos,int totalTime)
+{
+    int tmpPos = 0;
+    int excessTime = 0;
+    bool lastCellFlag = false;
+    for(int i =0; i <= ui->tableWidget->columnCount(); i++)
+    {
+        if( i ==  ui->tableWidget->columnCount())
+        {
+            tmpPos = (((float)(timeCells[i-1].endTime-timeCells[0].beginTime)/totalTime))*ui->tableWidget->width();
+            lastCellFlag = true;
+          //  qDebug() << "last cell is" << i-1;
+        }
+        else
+            tmpPos = (((float)(timeCells[i].beginTime-timeCells[0].beginTime)/totalTime))*ui->tableWidget->width();
+        qDebug() << "pos" << pos;
+        qDebug() << "tmpPos"<< tmpPos;
+        qDebug() << "timeCells[i].beginTime" << timeCells[i].beginTime;
+        qDebug() << "timeCells[0].beginTime" << timeCells[0].beginTime;
+        if(pos>=tmpPos)
+        {
+
+        }
+        else
+        {
+
+            if(i>=0)//freeze at selected i this position
+            {
+                if(i==0)
+                    qDebug()<< "ZEROOOO";
+                else
+                {
+//                    qDebug() << "move to cell" << i-1;
+//                    qDebug() << "pos" << pos;
+//                    qDebug() << "tmpPos"<< tmpPos;
+                    excessTime = (((float)(pos-ui->tableWidget->columnViewportPosition(i-1))/ui->tableWidget->width()))*totalTime;
+    //                qDebug()<< "excess time " << excessTime;
+    //                qDebug() << "delay MS" << delayMs;
+    //                qDebug() << "excess delay ms" << excessTime*100;
+                    if(ui->tableWidget->currentColumn()!=i-1)
+                    {
+                        moveToAnotherTimeSegment(i-1);
+                        ui->tableWidget->setCurrentCell(0,i-1);
+                    }
+//                    qDebug() << "pos2";
+                    //correctCellSeekerPosition((float)(pos/totalTime)*ui->tableWidget->width());
+                    delayMsToSet = excessTime*100;
+
+                    i = ui->tableWidget->columnCount();
+                }
+//                else
+//                {
+//                    qDebug() << "move to cell" << i;
+//                    qDebug() << "pos" << pos;
+//                    qDebug() << "tmpPos"<< tmpPos;
+//                    excessTime = (((float)(pos-ui->tableWidget->columnViewportPosition(i))/ui->tableWidget->width()))*totalTime;
+//    //                qDebug()<< "excess time " << excessTime;
+//    //                qDebug() << "delay MS" << delayMs;
+//    //                qDebug() << "excess delay ms" << excessTime*100;
+//                    if(ui->tableWidget->currentColumn()!=i)
+//                    {
+//                        moveToAnotherTimeSegment(i);
+//    //                    ui->tableWidget->setCurrentCell(0,i-1);
+//                    }
+
+//                    correctCellSeekerPosition((float)(pos/totalTime)*ui->tableWidget->width());
+//                    delayMsToSet = excessTime*100;
+
+//                    i = ui->tableWidget->columnCount();
+//                }
+
+            }
+            else if(i==0)
+            {
+//                if(lastCellFlag)
+//                {
+                    excessTime = (((float)(pos-ui->tableWidget->columnViewportPosition(i))/ui->tableWidget->width()))*totalTime;
+                    if(ui->tableWidget->currentColumn()!=i)
+                         moveToAnotherTimeSegment(i);
+                    qDebug() << "pos1";
+                    correctCellSeekerPosition((float)(pos/totalTime)*ui->tableWidget->width());
+                    delayMsToSet = excessTime*100;
+                    i = ui->tableWidget->columnCount();
+                    qDebug() << "ZERO POS";
+//                }
+//                else
+//                {
+//                    excessTime = (((float)(pos-ui->tableWidget->columnViewportPosition(i))/ui->tableWidget->width()))*totalTime;
+//                    if(ui->tableWidget->currentColumn()!=i)
+//                         moveToAnotherTimeSegment(i);
+//                    correctCellSeekerPosition((float)(pos/totalTime)*ui->tableWidget->width());
+//                    delayMsToSet = excessTime*100;
+//                    i = ui->tableWidget->columnCount();
+//                }
+
+            }
+        }
+    }
+}
 
 bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
 //    qDebug() << event->type();
-    if((event->type()==QEvent::MouseMove)&target!=0x0)//&isSliderPressed
+//    if(event->type()==QEvent::MouseButtonPress)
+//    {
+//    for(int i = 0; i < thermoVals.size(); i++)
+//    {
+//        if(target == thermoVals.at(i))
+//        {
+//            qDebug() << "OWO";
+////            thermoVals.at(i)->clear();
+////            thermoVals.at(i)->setText("12");
+////            return true;
+//        }
+//    }
+    if(event->type() == QEvent::MouseButtonRelease)
     {
-        int changedTime1=0,changedTime2=0;
-        int oneVideoLength=0;
-//        changedTime1 =((float)value/ui->horizontalSlider->maximum())*vplayer->_player->length();
-//        changedTime2 =((float)value/ui->horizontalSlider->maximum())*vplayer2->_player->length();
-        //qDebug() << "this event!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-        //qDebug() << "vplayer file length is" << vplayer->_player->length();
-        //qDebug() << "vplayer file length is" << vplayer2->_player->length();
-        if((vplayer->_player->length()!=-1)&(vplayer2->_player->length()!=-1))
+        QMouseEvent *mouseEvent = (QMouseEvent *) event;
+       // QWidget *widget = qApp->widgetAt(QCursor::pos());
+       // QString widget_name = widget->objectName();
+        QString parent_name = target->objectName();
+        if((target== ui->line_5)||(target==  ui->tableWidget->viewport())||(parent_name=="ScaleWidget"))
         {
-            if(vplayer->_player->length()<vplayer2->_player->length())
-                oneVideoLength = vplayer->_player->length();
-            else
-                oneVideoLength = vplayer2->_player->length();
-        }
-        else
-        {
-//            if((vplayer->_player->length()==-1)&(vplayer2->_player->length()==-1))
+//            if(canMoveSeeker)
 //            {
-//                int playIterator=0;
-//                //qDebug() << playingFile1;
-//                for(int i = 0; i < videoList.size();i++ )
-//                    if(playingFile1==videoList[i])
-//                        playIterator;
-                oneVideoLength = (dataMap[pageIndex].timeEdge2 - dataMap[pageIndex].timeEdge1)*1000;
-//                //qDebug() << timeSegment[timeSegmentIterator*2+1] - timeSegment[timeSegmentIterator*2];
-//                //qDebug() <<  playIterator;
-//                //qDebug() << playingFile2;
+//                ui->playButton->click();
+                canMoveSeeker = false;
+//                ui->line_5->setAttribute(Qt::WA_TransparentForMouseEvents,false);
 //            }
-//            else
+//
 //            {
-//                //qDebug() << "vplayer file length is" << vplayer->_player->length();
-//                //qDebug() << "vplayer file length is" << vplayer2->_player->length();
+//                qDebug() << "line53";
+////                ui->playButton->click();
+//                int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+//                int currentPos = mouseEvent->x();//delayMs/100;
+
+//                getCellAndTimeToMoveTo(mouseEvent->x(),totalTime);
+//                currentPos = ((float)(currentPos/totalTime))*ui->tableWidget->width();
+////                correctCellSeekerPosition(currentPos);
+//                qDebug() << "mouse pos tableWidget CLICK!" << mouseEvent->x();
+//                delayMs = delayMsToSet;\
+//                updateTime();
+//                delayMs = delayMsToSet;\
+//           //     delayMsToSet = 0;
+//                updateTime();
+//    //            qDebug() << "delayMs"<<delayMs;
+//                ui->horizontalSlider->setValue(delayMs/100);
+//    //            qDebug() << "delayMs"<<delayMs;
+//                setSliderPosition();
+//                canMoveSeeker = false;
 //            }
         }
-        //qDebug() << "oneVideoLength" << oneVideoLength;
-        changedTime1 = ui->horizontalSlider->value()*1000;/*((float)ui->horizontalSlider->value()/ui->horizontalSlider->maximum())*((float)oneVideoLength/(ui->horizontalSlider->maximum()))*(ui->horizontalSlider->value());*/
-        if(changedTime1>vplayer->_player->length())
-            changedTime1 = vplayer->_player->length();
-        changedTime2 = ui->horizontalSlider->value()*1000;/*((float)ui->horizontalSlider->value()/ui->horizontalSlider->maximum())*((float)oneVideoLength/(ui->horizontalSlider->maximum()))*(ui->horizontalSlider->value());*/
-        if(changedTime2>vplayer2->_player->length())
-            changedTime2 = vplayer2->_player->length();
-//        qDebug() << "changedTime1"<< changedTime1;
-       // changedTime2 =((float)ui->horizontalSlider->value()/ui->horizontalSlider->maximum())*oneVideoLength;
-        //qDebug() << "changedTime1" <<changedTime1;
-      //  //qDebug() << changedTime2;
-        if((!videoOnly)|(offsetsAvailable))
+    }
+    else if(event->type() == QEvent::MouseMove|QEvent::MouseButtonPress & target != 0x0)
+    {
+        QMouseEvent *mouseEvent = (QMouseEvent *) event;
+       // QWidget *widget = qApp->widgetAt(QCursor::pos());
+       // QString widget_name = widget->objectName();
+        QString parent_name = target->objectName();
+        if((target==  ui->tableWidget->viewport())||(parent_name=="ScaleWidget"))
         {
-            vplayer->_player->setTime(changedTime1 + maxCamOffset - camOffsets.at(ui->comboBox->currentIndex()-1));
-            vplayer2->_player->setTime(changedTime2 + maxCamOffset - camOffsets.at(ui->comboBox_2->currentIndex()-1));
-            delayMs = (changedTime1 + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
+            int tmpval = ui->tableWidget->viewport()->mapFromGlobal(QCursor::pos()).x();//-ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn());
+            qDebug() << "global coords1" << tmpval;
+//            canMoveSeeker = true;
+            int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+//            int currentPos = mouseEvent->x();//delayMs/100;ui->tableWidget->columnViewportPosition(i-1)
+            getDelayMsToSet(tmpval,totalTime); //ui->tableWidget->viewport()->mapFromGlobal(QCursor::pos()).x(),totalTime);
+           // correctCellSeekerPosition(ui->tableWidget->mapFromGlobal(QCursor::pos()).x());
+            delayMs = delayMsToSet;\
+            updateTime();
+            delayMs = delayMsToSet;\
+            updateTime();
+            ui->horizontalSlider->setValue(delayMs/100);
+            setSliderPosition();
         }
-        else
+        else if(target== ui->line_5)
         {
-            vplayer->_player->setTime(changedTime1);
-            vplayer2->_player->setTime(changedTime2);
-            delayMs = changedTime1;// + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
+            int tmpval = ui->tableWidget->viewport()->mapFromGlobal(QCursor::pos()).x();//-ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn());
+            qDebug() << "global coords2" << tmpval;
+//            canMoveSeeker = true;
+            int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+//            int currentPos = mouseEvent->x();//delayMs/100;
+            getDelayMsToSet(tmpval,totalTime);//ui->tableWidget->viewport()->mapFromGlobal(QCursor::pos()).x(),totalTime);
+           // correctCellSeekerPosition(ui->tableWidget->mapFromGlobal(QCursor::pos()).x());
+            delayMs = delayMsToSet;\
+            updateTime();
+            delayMs = delayMsToSet;\
+            updateTime();
+            ui->horizontalSlider->setValue(delayMs/100);
+            setSliderPosition();
+
+//            updateTime();
+//            setSliderPosition();
+//            updateTime();
+
         }
+        else if(parent_name=="horizontalSlider")
+        {
+            qDebug()<<"slider event!";
+//            QStyleOptionSlider opt;
+//             ui->horizontalSlider->initStyleOption(&opt);
+//             QRect sr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
+//            if (event->button() == Qt::LeftButton &&sr.contains(mouseEvent->pos()) == false)
+//            {
+            double halfHandleWidth = 2.5; // Correct rounding
+             int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+
+//                int newVal;
+//                newVal = ui->horizontalSlider->minimum() + ((ui->horizontalSlider->maximum()-ui->horizontalSlider->minimum()) * mouseEvent->x()) / ui->horizontalSlider->width();
+//                qDebug() << mouseEvent->x();
+//                if (invertedAppearance() == true)
+//                    setValue( maximum() - newVal );
+//                else
+//                    setValue(newVal);
+                int adaptedPosX = mouseEvent->x();
+                if ( adaptedPosX < halfHandleWidth )
+                        adaptedPosX = halfHandleWidth;
+                if ( adaptedPosX > ui->horizontalSlider->width() - halfHandleWidth )
+                        adaptedPosX = ui->horizontalSlider->width() - halfHandleWidth;
+//                // get new dimensions accounting for slider handle width
+                double newWidth = (ui->horizontalSlider->width() - halfHandleWidth) - halfHandleWidth;
+                double normalizedPosition = (adaptedPosX - halfHandleWidth)  / newWidth ;
+                int newVal = ui->horizontalSlider->minimum() + ((ui->horizontalSlider->maximum()-ui->horizontalSlider->minimum()) * normalizedPosition);
+                ui->horizontalSlider->setValue(newVal/*ui->horizontalSlider->minimum()+((ui->horizontalSlider->maximum()-ui->horizontalSlider->minimum())*mouseEvent->x())/ui->horizontalSlider->width()*/);
+                newVal = ((float)ui->horizontalSlider->value()/totalTime)*ui->tableWidget->width();
+                qDebug() << "newVal1";
+                correctCellSeekerPosition(newVal);
+                updateTime();
+                setSliderPosition();
+                updateTime();
 
 
-        updateTime();
+//            }
+        }
+    }
+    else if(event->type() == QEvent::MouseButtonPress & target!=0x0)
+    {
+        QMouseEvent *mouseEvent = (QMouseEvent *) event;
+       // QWidget *widget = qApp->widgetAt(QCursor::pos());
+       // QString widget_name = widget->objectName();
+        QString parent_name = target->objectName();
+       // if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+        if(parent_name=="ScaleWidget")
+        {
+            int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+            int currentPos = mouseEvent->x();//delayMs/100;
+            getCellAndTimeToMoveTo(mouseEvent->x(),totalTime);
+            currentPos = ((float)(currentPos/totalTime))*ui->tableWidget->width();
+            qDebug() << "mouse pos scalewidget CLICK!" << mouseEvent->x();
+            delayMs = delayMsToSet;\
+            updateTime();
+            delayMs = delayMsToSet;\
+       //     delayMsToSet = 0;
+            updateTime();
+//            qDebug() << "delayMs"<<delayMs;
+            ui->horizontalSlider->setValue(delayMs/100);
+//            qDebug() << "delayMs"<<delayMs;
+            setSliderPosition();
+            qDebug() << "WIDTH OF TABLE" << ui->tableWidget->width();
+            qDebug() << "WIDTH OF SCALE" << ui->ScaleWidget->width();
+//            canMoveSeeker= true;
+//            qDebug() << "delayMs"<<delayMs;
+//            correctCellSeekerPosition(currentPos);
+//            correctCellSeekerPosition(currentPos);
+//            setSliderPosition();
+//            updateTime();
+        }
+
+        if(target == ui->tableWidget->viewport())
+        {
+            int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+            int currentPos = mouseEvent->x();//delayMs/100;
+            getCellAndTimeToMoveTo(mouseEvent->x(),totalTime);
+            currentPos = ((float)(currentPos/totalTime))*ui->tableWidget->width();
+            qDebug() << "mouse pos tableWidget CLICK!" << mouseEvent->x();
+            delayMs = delayMsToSet;\
+            updateTime();
+            delayMs = delayMsToSet;\
+       //     delayMsToSet = 0;
+            updateTime();
+//            qDebug() << "delayMs"<<delayMs;
+            ui->horizontalSlider->setValue(delayMs/100);
+//            qDebug() << "delayMs"<<delayMs;
+            setSliderPosition();
+//            canMoveSeeker = true;
+//            qDebug() << "delayMs"<<delayMs;
+        }
+
+//        if(parent_name =="viewPort")
+//        {
+////            qDebug() << "tw";
+////            int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+////            int currentPos = mouseEvent->x();//delayMs/100;
+////            getCellAndTimeToMoveTo(mouseEvent->x(),totalTime);
+////            currentPos = ((float)(currentPos/totalTime))*ui->ScaleWidget->width();
+//           // qDebug() << "mouse pos TABLE WIDGET CLICK!!!!!" << mouseEvent->x();
+////            int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+////            int currentPos = mouseEvent->x();//delayMs/100;
+////            getCellAndTimeToMoveTo(mouseEvent->x(),totalTime);
+////            currentPos = ((float)(currentPos/totalTime))*ui->ScaleWidget->width();
+////            qDebug() << "mouse pos TABLEWIDGET CLICK!" << mouseEvent->x();
+////            delayMs = delayMsToSet;\
+////            updateTime();
+////            delayMs = delayMsToSet;\
+////       //     delayMsToSet = 0;
+////            updateTime();
+////            qDebug() << "delayMs"<<delayMs;
+////            ui->horizontalSlider->setValue(delayMs/100);
+////            qDebug() << "delayMs"<<delayMs;
+////            setSliderPosition();
+////            qDebug() << "delayMs"<<delayMs;
+////            correctCellSeekerPosition(currentPos);
+//                        //updateTime();
+//        }
+        if(parent_name=="horizontalSlider")
+        {
+            qDebug()<<"slider event!";
+//            QStyleOptionSlider opt;
+//             ui->horizontalSlider->initStyleOption(&opt);
+//             QRect sr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
+//            if (event->button() == Qt::LeftButton &&sr.contains(mouseEvent->pos()) == false)
+//            {
+            double halfHandleWidth = 2.5; // Correct rounding
+             int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+
+//                int newVal;
+//                newVal = ui->horizontalSlider->minimum() + ((ui->horizontalSlider->maximum()-ui->horizontalSlider->minimum()) * mouseEvent->x()) / ui->horizontalSlider->width();
+//                qDebug() << mouseEvent->x();
+//                if (invertedAppearance() == true)
+//                    setValue( maximum() - newVal );
+//                else
+//                    setValue(newVal);
+                int adaptedPosX = mouseEvent->x();
+                if ( adaptedPosX < halfHandleWidth )
+                        adaptedPosX = halfHandleWidth;
+                if ( adaptedPosX > ui->horizontalSlider->width() - halfHandleWidth )
+                        adaptedPosX = ui->horizontalSlider->width() - halfHandleWidth;
+//                // get new dimensions accounting for slider handle width
+                double newWidth = (ui->horizontalSlider->width() - halfHandleWidth) - halfHandleWidth;
+                double normalizedPosition = (adaptedPosX - halfHandleWidth)  / newWidth ;
+                int newVal = ui->horizontalSlider->minimum() + ((ui->horizontalSlider->maximum()-ui->horizontalSlider->minimum()) * normalizedPosition);
+                ui->horizontalSlider->setValue(newVal/*ui->horizontalSlider->minimum()+((ui->horizontalSlider->maximum()-ui->horizontalSlider->minimum())*mouseEvent->x())/ui->horizontalSlider->width()*/);
+                newVal = ((float)ui->horizontalSlider->value()/totalTime)*ui->tableWidget->width();
+                qDebug() << "newVal2";
+                correctCellSeekerPosition(newVal);
+                updateTime();
+                setSliderPosition();
+                updateTime();
+
+
+//            }
+        }
+    }
+    else if((event->type()==QEvent::MouseMove)&target!=0x0)//&isSliderPressed
+    {
+        setSliderPosition();
+    }
+//}
+     return QMainWindow::eventFilter(target, event);
+}
+
+void MainWindow::setSliderPosition()
+{
+    int changedTime1=0,changedTime2=0;
+    int oneVideoLength=0;
+    if((vplayer->_player->length()!=-1)&(vplayer2->_player->length()!=-1))
+    {
+        if(vplayer->_player->length()<vplayer2->_player->length())
+            oneVideoLength = vplayer->_player->length();
+        else
+            oneVideoLength = vplayer2->_player->length();
+    }
+    else
+    {
+            oneVideoLength = (dataMap[pageIndex].timeEdge2 - dataMap[pageIndex].timeEdge1)*1000;
+
+    }
+    //qDebug() << "oneVideoLength" << oneVideoLength;
+    changedTime1 = ui->horizontalSlider->value()*1000;/*((float)ui->horizontalSlider->value()/ui->horizontalSlider->maximum())*((float)oneVideoLength/(ui->horizontalSlider->maximum()))*(ui->horizontalSlider->value());*/
+    if(changedTime1>vplayer->_player->length())
+        changedTime1 = vplayer->_player->length();
+    changedTime2 = ui->horizontalSlider->value()*1000;/*((float)ui->horizontalSlider->value()/ui->horizontalSlider->maximum())*((float)oneVideoLength/(ui->horizontalSlider->maximum()))*(ui->horizontalSlider->value());*/
+    if(changedTime2>vplayer2->_player->length())
+        changedTime2 = vplayer2->_player->length();
+    if((!videoOnly)|(offsetsAvailable))
+    {
+        vplayer->_player->setTime(changedTime1 + maxCamOffset - camOffsets.at(ui->comboBox->currentIndex()-1));
+        vplayer2->_player->setTime(changedTime2 + maxCamOffset - camOffsets.at(ui->comboBox_2->currentIndex()-1));
+        delayMs = (changedTime1 + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
+    }
+    else
+    {
+        vplayer->_player->setTime(changedTime1);
+        vplayer2->_player->setTime(changedTime2);
+        delayMs = changedTime1;// + camOffsets.at(ui->comboBox->currentIndex()-1))/10;
     }
 
-     return QMainWindow::eventFilter(target, event);
+
+    updateTime();
+//    delayMsToSet = 0;
 }
 
 void MainWindow::on_timeEdit_timeChanged(const QTime &time)
@@ -4323,41 +4785,43 @@ void MainWindow::on_timeEdit_timeChanged(const QTime &time)
 
 void MainWindow::on_tableWidget_cellChanged(int row, int column)
 {
-//    qDebug() << column;
-//    pageIndex = column;
-//    if(pageIndex>dataMap.size()-1)
-//        pageIndex = dataMap.size()-1;
-//    int tmp1=0,tmp2=0;
-////    ui->tableWidget->setCurrentCell(0,pageIndex);
-//    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-//    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+    qDebug() << "cell changed!";
+    qDebug() << "SETTING PAGE INDEX" << column;
+    pageIndex = column;
+    if(pageIndex>dataMap.size()-1)
+        pageIndex = dataMap.size()-1;
+    int tmp1=0,tmp2=0;
+//    ui->tableWidget->setCurrentCell(0,pageIndex);
+    QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
 
-//    while(tmp1<=ui->comboBox->currentIndex())
-//    {
-//        Iter1.next();
-//        tmp1++;
-//    }
-//    while(tmp2<=ui->comboBox_2->currentIndex())
-//    {
-//        Iter2.next();
-//        tmp2++;
-//    }
-//    qDebug() << ui->comboBox->currentIndex();
-//    qDebug() << ui->comboBox_2->currentIndex();
-//    qDebug() << Iter1.key();
-//    qDebug() << Iter2.key();
-////    vplayer->_player->pause();
-////    vplayer2->_player->pause();
-////    while(vplayer->_player->state()!=4){}
-////    while(vplayer2->_player->state()!=4){}
-//        openVideoFile(Iter1.key(),Iter2.key());
-//        openLogFile(dataMap[pageIndex].logName);
-//        if(mythread->isRunning())
-//            mythread->exit();
+    while(tmp1<=ui->comboBox->currentIndex())
+    {
+        Iter1.next();
+        tmp1++;
+    }
+    while(tmp2<=ui->comboBox_2->currentIndex())
+    {
+        Iter2.next();
+        tmp2++;
+    }
+    qDebug() << ui->comboBox->currentIndex();
+    qDebug() << ui->comboBox_2->currentIndex();
+    qDebug() << Iter1.key();
+    qDebug() << Iter2.key();
+//    vplayer->_player->pause();
+//    vplayer2->_player->pause();
+//    while(vplayer->_player->state()!=4){}
+//    while(vplayer2->_player->state()!=4){}
+        openVideoFile(Iter1.key(),Iter2.key());
+        openLogFile(dataMap[pageIndex].logName);
+        if(mythread->isRunning())
+            mythread->exit();
 }
 void MainWindow::moveToAnotherTimeSegment(int column)
 {
     bool nextpage = false;
+
         if((timeCells[column].cellType==0))//||(timeCells[column].cellType==3))
         {
 
@@ -4366,10 +4830,12 @@ void MainWindow::moveToAnotherTimeSegment(int column)
         }
         else
             createFakeTimeScale(timeCells[column].cellType);
+        qDebug() << "CURRENT COLUMN INDEX"<<column;
+        qDebug() << "CURRENT PAGE INDEX"<< pageIndex;
+        qDebug() << "PAGE FLAG VECTOR" << timeCells[column].cellType;
+        qDebug() << "NEXTPAGE" << nextpage;
         pageIndex = timeCells[column].currentPage;
-        qDebug() << "current column index"<<column;
-        qDebug() << "current pageindex"<< pageIndex;
-        qDebug() << "pageFlagVector" << timeCells[column].cellType;
+
         int tmp1=0,tmp2=0;
     //    ui->tableWidget->setCurrentCell(0,pageIndex);
         QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
@@ -4393,23 +4859,42 @@ void MainWindow::moveToAnotherTimeSegment(int column)
         {
 
             openVideoFile(Iter1.key(),Iter2.key());
+             qDebug() << "VIDEO HAS CHANGED from moveToAnotherTimeSegment";
             openLogFile(dataMap[pageIndex].logName);
             if(mythread->isRunning())
             {
                 mythread->exit();
                 ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+                correctFramePosition();
             }
             if(vplayer->_player->state()==3)
             {
                 mythread->start();
                 ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+                correctFramePosition();
             }
         }
+
 }
 
-void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
-{
-    moveToAnotherTimeSegment(index.column());
+//void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
+//{
+
+//    qDebug() << "CELL CHANGED!!!!!!!!!!!!!!!" << index.column();
+//    if(index.column()!=ui->tableWidget->currentColumn())
+//        moveToAnotherTimeSegment(index.column());
+//    {
+     //
+//     delayMs = delayMsToSet;\
+//     updateTime();
+//     delayMs = delayMsToSet;\
+//     updateTime();
+//     qDebug() << "delayMs"<<delayMs;
+//     ui->horizontalSlider->setValue(delayMs/100);
+//     qDebug() << "delayMs"<<delayMs;
+//     setSliderPosition();
+//     qDebug() << "delayMs"<<delayMs;
+//    }
 //        bool nextpage = false;
 //            if((timeCells[index.column()].cellType==0)||(timeCells[index.column()].cellType==3))
 //                nextpage = true;
@@ -4466,17 +4951,29 @@ void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
           //  updateTime();
 
   //  }
-}
+//    correctFramePosition();
+//}
 
 void MainWindow::on_horizontalSlider_actionTriggered(int action)
 {
 
 }
 
-void MainWindow::on_tableWidget_cellClicked(int row, int column)
-{
+//void MainWindow::on_tableWidget_cellClicked(int row, int column)
+//{
+    //qDebug() << "CELL CLICKED!!!!!!!!!!!!!!!";// << column;
 
-}
+//     moveToAnotherTimeSegment(column);
+//     delayMs = delayMsToSet;\
+//     updateTime();
+//     delayMs = delayMsToSet;\
+//     updateTime();
+//     qDebug() << "delayMs"<<delayMs;
+//     ui->horizontalSlider->setValue(delayMs/100);
+//     qDebug() << "delayMs"<<delayMs;
+//     setSliderPosition();
+//     qDebug() << "delayMs"<<delayMs;
+//}
 
 void MainWindow::paintEvent(QPaintEvent *event)
 {
@@ -4520,3 +5017,40 @@ void MainWindow::paintEvent(QPaintEvent *event)
 //    tmp.setY(ptmp.y()+ui->horizontalSlider->height()-ui->line->height());
 //    tmp.setSize(ui->line->rect().size());
 }
+
+//void MainWindow::on_tableWidget_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
+//{
+////    qDebug() << "CELL CHANGED!!!!!!!!!!!!!!!" << currentColumn;
+////     moveToAnotherTimeSegment(currentColumn);
+////     delayMs = delayMsToSet;\
+////     updateTime();
+////     delayMs = delayMsToSet;\
+//////     delayMsToSet = 0;
+////     updateTime();
+////     qDebug() << "delayMs"<<delayMs;
+////     ui->horizontalSlider->setValue(delayMs/100);
+////     qDebug() << "delayMs"<<delayMs;
+////     setSliderPosition();
+////     qDebug() << "delayMs"<<delayMs;
+
+//}
+
+//void MainWindow::on_tableWidget_cellClicked(int row, int column)
+//{
+////    QMouseEvent mouseEvent = ;
+////    int totalTime = timeCells[timeCells.size()-1].endTime - timeCells[0].beginTime;
+////    int currentPos = mouseEvent.x();//delayMs/100;
+////    getCellAndTimeToMoveTo(mouseEvent.x(),totalTime);
+////    currentPos = ((float)(currentPos/totalTime))*ui->ScaleWidget->width();
+////    qDebug() << "mouse pos TABLEWIDGET CLICK!" << mouseEvent.x();
+////    delayMs = delayMsToSet;\
+////    updateTime();
+////    delayMs = delayMsToSet;\
+//////     delayMsToSet = 0;
+////    updateTime();
+////    qDebug() << "delayMs"<<delayMs;
+////    ui->horizontalSlider->setValue(delayMs/100);
+////    qDebug() << "delayMs"<<delayMs;
+////    setSliderPosition();
+////    qDebug() << "delayMs"<<delayMs;
+//}

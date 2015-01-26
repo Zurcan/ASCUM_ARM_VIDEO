@@ -29,6 +29,11 @@
 #include <msgSys.h>
 #include <qwt.h>
 #include <qwt_thermo.h>
+#include <qwt_text_label.h>
+#include <QLineEdit>
+#include <QLine>
+#include <qwt_plot.h>
+#include <qwt_plot_marker.h>
 //#include <qwt_scale_draw.h>
 //#include <qwt_scale_engine.h>
 #include <QCheckBox>
@@ -138,6 +143,7 @@ virtual QwtText label(double v) const
    if(v==0)
    {
        retVal = upTime.toString("hh:mm:ss");
+//       retVal = upTime
        return retVal;
    }
 
@@ -148,11 +154,18 @@ void setTimeArr(time_t *t,int l)
     timeArr = t;
     timeArrLength = l;
 }
+void setTimeArrayDelta(int val)
+{
+    timeArrDelta = val;
+    qDebug() << "timeArrDelta"<<val;
+}
 
 private:
 const QString format;
 time_t *timeArr;
 int timeArrLength;
+int timeArrDelta;
+
 //void setLabelAlignment( Qt::Alignment );
 protected:
 virtual void drawLabel(QPainter *painter, double value) const;
@@ -278,7 +291,7 @@ private:
     int widget1X;
     int widget1Y;
     int lastVal;
-
+    int delayMsToSet = 0;
     bool firstPass = true;
     bool videoOnly = true;
     bool offsetsAvailable = true;
@@ -294,6 +307,9 @@ private:
     bool playersStatesSynchronized = false;
     bool isSliderPressed=false;
     bool isFolderOpened;
+    bool readyToPlay = false;
+    bool accepted = false;
+    bool canMoveSeeker = false;
 
     char tmpFHPtr[40];
     int pageIndex;
@@ -322,7 +338,7 @@ private:
     //form funcs
     QMessageBox newMessage;
     QVector <QwtThermo*> parameterBar;
-    QVector <QLabel*> thermoVals;
+    QVector <QLineEdit*> thermoVals;
     int initSlider(int);
     int initColoredScale();
     int initBigThermos(int qty);
@@ -350,11 +366,11 @@ private:
     QVector <int> videoTimes;
     QVector <int> logEndTimes;
     QVector <int> offsetsCounter;
-    QVector <float> columnWidthes;                //relative to total time length column width
-    QVector <int> pageVector;                     //consists of ints each of it means what pageIndex is in current cell
-    QVector <int> pageFlagVector;                 //consists of ints each of it means what behaviour should be at current cell processing 0 - play video 1 - show parameters 2 - ok do nothing 3 - error do nothing
-    QVector <int> pageEndTimes;                 //contains start times of each cell
-    QVector <QWidget> coloredBars;
+//    QVector <float> columnWidthes;                //relative to total time length column width
+//    QVector <int> pageVector;                     //consists of ints each of it means what pageIndex is in current cell
+//    QVector <int> pageFlagVector;                 //consists of ints each of it means what behaviour should be at current cell processing 0 - play video 1 - show parameters 2 - ok do nothing 3 - error do nothing
+//    QVector <int> pageEndTimes;                 //contains start times of each cell
+//    QVector <QWidget> coloredBars;
 
 //    FlyingFrame *myFrame;
 //    MyThread *thrd;
@@ -436,6 +452,8 @@ private:
     int openVideoConfigFile(QString *);
     int updateConfigFile(QString);
     void moveToAnotherTimeSegment(int);
+    void getCellAndTimeToMoveTo(int, int );
+    void getDelayMsToSet(int, int );
 private slots:
 //    int getNextFileName();
 //    int getNextFileSameName();
@@ -443,6 +461,7 @@ private slots:
     void waitEndStateTimerTick();
     void getThreadedTicks(int);
     void correctFramePosition();
+    void correctCellSeekerPosition(int newPos);
 //    void waitVideo2EndMode();
     void simpleDelayTimerTick();
     void setPlayer1ModePlaying();
@@ -451,6 +470,7 @@ private slots:
     void setPlayer2ModePaused();
     void setPlayer1State();
     void setPlayer2State();
+    void setSliderPosition();
     bool checkVideosSynchronized();
     void setPlayer1ModeOpening();
     void setPlayer2ModeOpening();
@@ -511,11 +531,15 @@ private slots:
 
     void on_tableWidget_cellChanged(int row, int column);
 
-    void on_tableWidget_clicked(const QModelIndex &index);
+//    void on_tableWidget_clicked(const QModelIndex &index);
 
     void on_horizontalSlider_actionTriggered(int action);
 
-    void on_tableWidget_cellClicked(int row, int column);
+//    void on_tableWidget_cellClicked(int row, int column);
+//    void on_tableWidget_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+
+//    void on_tableWidget_cellClicked(int row, int column);
+
 protected:
     void paintEvent(QPaintEvent *);
 
