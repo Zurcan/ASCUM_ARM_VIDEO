@@ -16,6 +16,7 @@ void VideoPlayer::defineVideo(QObject *parent, QWidget *videoparent1/*, QWidget 
     int x1,y1,x2,y2;
 //    _instance_2 = new VlcInstance(VlcCommon::args(),parent);
     _player = new VlcMediaPlayer(_instance);
+    someVideo = new VlcVideo(_player);
 //    _player_2 = new VlcMediaPlayer(_instance_2);
     video = new VlcWidgetVideo(videoparent1);
 //    video_2 = new VlcWidgetVideo(videoparent2);
@@ -72,11 +73,11 @@ int VideoPlayer::openLocal(QString file)
     QFile somefile;
     somefile.setFileName(file);
 
-    qDebug() <<"size of file" << file << "is " << somefile.size();
+//    qDebug() <<"size of file" << file << "is " << somefile.size();
     if(somefile.size()<10000)
     {
         _player->stop();
-        qDebug() << "quiting openLocal";
+//        qDebug() << "quiting openLocal";
 
         return 2;
     }
@@ -127,14 +128,20 @@ int VideoPlayer::openLocal(QString file)
             return 2;
         }
     }
-    qDebug() << "state" << _player->state();
-    qDebug() << "length" << _player->length();
+//    qDebug() << "state" << _player->state();
+//    qDebug() << "length" << _player->length();
     _player->togglePause();
+
 //    _player->play();
 //    ispaused = false;
 
 //    filename = file;
     return 0;
+}
+void VideoPlayer:: showText(QString t)
+{
+    someVideo->showMarquee("123123",0,0,5,255,20,0xFFFFFF,5);
+
 }
 
 int VideoPlayer::setPlayerPosition(float pos)

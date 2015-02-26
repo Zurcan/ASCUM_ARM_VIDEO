@@ -310,6 +310,7 @@ private:
     bool readyToPlay = false;
     bool accepted = false;
     bool canMoveSeeker = false;
+    bool seekerIsBusy = false;
 
     char tmpFHPtr[40];
     int pageIndex;
@@ -338,11 +339,12 @@ private:
     //form funcs
     QMessageBox newMessage;
     QVector <QwtThermo*> parameterBar;
+    QVector <QCheckBox*> checkBoxes;
     QVector <QLineEdit*> thermoVals;
     int initSlider(int);
     int initColoredScale();
     int initBigThermos(int qty);
-    int initSmallThermos(int qty, QVector <QString>, QVector<long> maxs);
+    int initSmallThermos(int qty, QVector <QString>, QVector<long> maxs, QVector<int> dataSequence);
     void setButtonsEnable(bool tf);
     //log funcs
     logProcessor *log;
@@ -401,7 +403,7 @@ private:
     };
     QVector <tableCell> timeCells;
     QVector <dataPage> dataMap;
-//    int dataMapCurrentIndex;
+    int timeCellIndex;
 
     int openLogFilesFolder(QStringList *);//also we have to set some kind of sorting here, but the best choice is to set that sorting in the function
     int openVideoFilesFolder(QStringList *);//also we have to set some kind of sorting here, but the best choice is to set that sorting in the function
@@ -410,7 +412,7 @@ private:
     int readTimeEdges(time_t *beginTime, time_t *endTime/*, unsigned char *beginTimeFract, unsigned char *endTimeFract*/);                  // getting starting and ending times of the log to create one global tim axis
     int checkTimePointExistance(time_t);                                    // check if point with time value from global time axis is enabled
     int updateThermos(dataParams dp);
-    int createFakeTimeScale(int mode);                                              // here is matching of timeSegment on qslider taking place
+    int createFakeTimeScale(int mode, int column);                                              // here is matching of timeSegment on qslider taking place
     bool checkFileHeaderCRC(QString filename);
     bool createTimeSegment(QStringList *listOfLogs);                        //here is creating of timeSegment vector
     bool checkfunc(time_t *, time_t *);
@@ -421,8 +423,9 @@ private:
     int checkIsThereTimeFract(time_t);                                      //search for time fracts returns quantity of timeFracts
     int findTimeSegment(int);
     int initThermoMaxs(QVector <long> *);
-    int initThermoNames(QVector <QString> *);
-
+    int initThermoNames(QVector <QString> *, QVector<int> *dataSequence);
+    int setPlay();
+    int setPause();
     int checkVideoFilesExistance(QString path);
     int checkLogFilesExistance(QString path);
     int videoFileSelector(int camIndex, int lastOpenedFileIndex);
@@ -444,6 +447,7 @@ private:
     //config funcs
     QString logWorkingDir = "",videoWorkingDir = "";
     void setFolderWFiles(QString);
+    void setHSliderPosOnButtonPress(QMouseEvent *me);
     void selectVideoFolder();
     void selectLogFolder();
     int createLogConfigFile(QString logpath);
@@ -457,11 +461,13 @@ private:
 private slots:
 //    int getNextFileName();
 //    int getNextFileSameName();
+    void clearParTable();
     void resizeEvent(QResizeEvent *);
     void waitEndStateTimerTick();
     void getThreadedTicks(int);
     void correctFramePosition();
     void correctCellSeekerPosition(int newPos);
+    void terminateAll();
 //    void waitVideo2EndMode();
     void simpleDelayTimerTick();
     void setPlayer1ModePlaying();

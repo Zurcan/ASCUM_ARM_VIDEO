@@ -47,7 +47,7 @@ public:
     int getVideoLength();
     float getPosition();
     int setPlayerPosition(float pos);
-
+    void showText(QString t);
     QSize getVideoSize();
     QRect getGeometry();
     QString getCurrentMediaLocation();
