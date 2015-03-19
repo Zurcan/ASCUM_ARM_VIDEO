@@ -47,48 +47,7 @@ void MapTimeScaleDraw::drawLabel(QPainter *painter, double value) const
     painter->restore();
 }
 
-//void VideoSlider::drawHandle( QPainter *painter,const QRect &sliderRect, int pos ) const
-//{
-//    {
-//        const int bw = d_data->borderWidth;
 
-//        pos++; // shade line points one pixel below
-//        if ( orientation() == Qt::Horizontal )
-//        {
-//            QRect handleRect(
-//                pos - d_data->handleSize.width() / 2,
-//                sliderRect.y(),
-//                d_data->handleSize.width(),
-//                sliderRect.height()
-//            );
-
-//            qDrawShadePanel( painter,
-//                handleRect, palette(), false, bw,
-//                &palette().brush( QPalette::Button ) );
-
-//            qDrawShadeLine( painter, pos, sliderRect.top() + bw,
-//                pos, sliderRect.bottom() - bw,
-//                palette(), true, 1 );
-//        }
-//        else // Vertical
-//        {
-//            QRect handleRect(
-//                sliderRect.left(),
-//                pos - d_data->handleSize.height() / 2,
-//                sliderRect.width(),
-//                d_data->handleSize.height()
-//            );
-
-//            qDrawShadePanel( painter,
-//                handleRect, palette(), false, bw,
-//                &palette().brush( QPalette::Button ) );
-
-//            qDrawShadeLine( painter, sliderRect.left() + bw, pos,
-//                sliderRect.right() - bw, pos,
-//                palette(), true, 1 );
-//        }
-//    }
-//}
 void MyThread::getTicksFromWorker(int ticks)//receiving signal from worker and emitting signal to app
 {
     //////qDebug() << "ticks" << ticks;
@@ -205,8 +164,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     ui->setupUi(this);
+    //this->setCentralWidget(ui->widget);
+
     videoButton = new QPushButton(ui->mainToolBar);
-    ui->nextFrameButton->setVisible(false);
+    ui->nextFrameButton->setVisible(true);
     ui->frameBackwardButton->setVisible(false);
     ui->line->setVisible(false);
     ui->line_2->setVisible(false);
@@ -258,15 +219,24 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->lineEdit_2->setText("Выберите директорию с лог-файлами");
 //    ui->lineEdit_2->setEnabled(false);
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-       ui->nextTimeSegment->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
-           ui->stopButton->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
-               ui->previousTimeSegment->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
-                    ui->frameBackwardButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
-                        ui->nextFrameButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
+    ui->nextTimeSegment->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
+    ui->stopButton->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
+    ui->previousTimeSegment->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
+    ui->frameBackwardButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
+    ui->nextFrameButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
+    ui->screen1SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+    ui->screen1SoundButton->setEnabled(false);
+    ui->screen2SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+    ui->screen2SoundButton->setEnabled(false);
+//    sound1Enabled = 1;
+//    sound2Enabled = 2;
     ui->pushButton->setVisible(false);
+    QString str = "12121212";
+    qDebug() << str.toUtf8().data();
 //               GLOBALMODE = debmode;
 //    ui->Thermo->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
 //    ui->Thermo_2->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
+
     timer = new QTimer(this);
     ui->progressBar->setVisible(false);
     dataMap.clear();
@@ -283,7 +253,9 @@ MainWindow::MainWindow(QWidget *parent) :
     getTimeTimer = new QTimer(0);
     simpleDelayTimer = new QTimer(this);
     waitEndStateTimer = new QTimer(this);
-    vplayer->defineVideo(this,ui->widget);
+    showCameraNameTimer = new QTimer(this);
+    vplayer->defineVideo(/*ui->widget*/this,ui->widget);
+
     mythread = new QThread(this);
     someThread = new MyThread(this);
     worker = new ThreadWorker();
@@ -327,7 +299,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    vplayer->_player->startTimer(40,Qt::PreciseTimer);
     videoLayout2 = new QHBoxLayout;
     vplayer2 = new VideoPlayer;
-    vplayer2->defineVideo(this,ui->widget_2);
+    vplayer2->defineVideo(ui->widget_2,ui->widget_2);
     connect(delayTimer,SIGNAL(timeout()),this,SLOT(delayTimerTick()));
     connect(videoButton,SIGNAL(clicked()),this,SLOT(on_action_4_triggered()));
 //    connect(logButton,SIGNAL(clicked()),this,SLOT(on_action_triggered()));
@@ -347,6 +319,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    connect(vplayer2->_player, SIGNAL(stateChanged()),this,SLOT(stateTimerTick()));
     connect(simpleDelayTimer, SIGNAL(timeout()),this,SLOT(simpleDelayTimerTick()));
     connect(stateTimer, SIGNAL(timeout()),this,SLOT(stateTimerTick()));
+    connect(showCameraNameTimer,SIGNAL(timeout()),this,SLOT(on_nextFrameButton_clicked()));
 
 //    connect(getTimeTimer,SIGNAL(timeout()),this,SLOT(getTimeTimerTick()));
 //    connect(vplayer->_player,SIGNAL(paused()),vplayer2->_player,SLOT(pause()));
@@ -502,6 +475,7 @@ void MainWindow::correctCellSeekerPosition(int newPos)
     ui->tableWidget->lower();
     ui->ScaleWidget->lower();
     ui->line_5->setLineWidth(4);
+    ui->line_5->setPalette(ui->ScaleWidget->palette());
     QRect tmp = ui->line_5->rect();
 //    //qDebug() << "before"<<this->mapToParent(ui->tableWidget->rect().bottomLeft());
     QPoint ptmp;
@@ -518,7 +492,9 @@ void MainWindow::correctCellSeekerPosition(int newPos)
         tmp.setHeight(22);//-tmp.height());
         ui->line_5->setGeometry(tmp);
         ui->line_5->setVisible(true);
+//        ui->line_5->repaint();
     }
+
 //    //qDebug() << "after"<<newPos;//ui->ScaleWidget->mapToGlobal(ui->line_5->rect().bottomLeft());
 //    ui->line_5->setAttribute( Qt::WA_TransparentForMouseEvents );
 
@@ -1554,6 +1530,39 @@ void MainWindow::selectVideoFolder()
     }
     accepted = false;
 }
+int MainWindow::checkFolderName(QString name)//correct folder name is type as YYYY.MM.DD
+{
+    int index = 0;
+    index = name.indexOf("/");
+    QDate date;
+    date.setDate(1900,1,1);
+    while(index!=-1)
+    {
+
+        qDebug() << index;
+        qDebug() << name;
+        name.remove(0,index+1);
+//        name.chop(name.length() - index);
+        qDebug() << name;
+        date = QDate::fromString(name,"yyyy.MM.dd");
+
+        index = name.indexOf("/");
+    }
+
+    if((date.isValid())&&(!date.isNull()))
+    {
+        qDebug() << date;
+        return 0;
+    }
+    else
+    {
+
+        qDebug() << "error!!!!!!!!!!!!!1111";
+        return 1;
+    }
+
+}
+
 void MainWindow::selectLogFolder()
 {
     QString logdir = "";
@@ -1562,7 +1571,7 @@ void MainWindow::selectLogFolder()
     logdir = dlg.getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
 //    ////qDebug() << "logdir" << logdir;
 //            ::getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
-    if(logdir!= "")
+    if((logdir!= "")&&(checkFolderName(logdir)==0))
     {
         if(logdir!=logWorkingDir)
         {
@@ -1570,30 +1579,39 @@ void MainWindow::selectLogFolder()
                 terminateAll();
             accepted = true;
             //logdir = dlg.getExistingDirectory(this, tr("Выбор директории лог-файлов"),QDir::homePath());
-            if(checkLogFilesExistance(logdir)==0)//if no .alg files found show error
-            {
-                newMessage.setWindowTitle("Ошибка!");
-                newMessage.setText("В выбранной вами папке лог-файлов не обнаружено! Пожалуйста, попробуйте еще раз.");
-                newMessage.exec();
-                LogFileError = 2;
-            }
-            else                        //else do all the next things
-            {
-                logWorkingDir = logdir;
-                videoWorkingDir = logdir;
-                ////////qDebug()() << logWorkingDir;
-        //        ui->lineEdit_2->setText(logWorkingDir);
-        //        ui->lineEdit->setText(logWorkingDir);
-        //        logCheck->setChecked(true);
-        //        videoCheck->setChecked(true);
-                LogFileError = 0;
-                isFolderOpened = true;
-            }
-            if((VideoFileError==0)&(LogFileError==0))
-            {
-                setButtonPanelEnabled(true);
+//            if(checkFolderName(logdir)==1);
+//            {
+//                accepted = false;
+//                LogFileError = 2;
 
-            }
+//            }
+//            else
+//            {
+                if(checkLogFilesExistance(logdir)==0)//if no .alg files found show error
+                {
+                    newMessage.setWindowTitle("Ошибка!");
+                    newMessage.setText("В выбранной вами папке лог-файлов не обнаружено! Пожалуйста, попробуйте еще раз.");
+                    newMessage.exec();
+                    LogFileError = 2;
+                }
+                else                        //else do all the next things
+                {
+                    logWorkingDir = logdir;
+                    videoWorkingDir = logdir;
+                    ////////qDebug()() << logWorkingDir;
+            //        ui->lineEdit_2->setText(logWorkingDir);
+            //        ui->lineEdit->setText(logWorkingDir);
+            //        logCheck->setChecked(true);
+            //        videoCheck->setChecked(true);
+                    LogFileError = 0;
+                    isFolderOpened = true;
+                }
+                if((VideoFileError==0)&(LogFileError==0))
+                {
+                    setButtonPanelEnabled(true);
+
+                }
+//            }
         }
         else accepted = false;
 
@@ -2075,7 +2093,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                             }
 //                            ////qDebug() << "camOffsets" << camOffsets.size();
 //                            ////qDebug() << "size of video list" << videoList.size();
-                            vplayer->_player->stop();
+                            vplayer->stop();
                             QFile filetocheck;
 //                            ////qDebug() << "some size from here" << filetocheck.fileName();
 //                            if(globalIterator ==logList.size()-1)
@@ -2094,6 +2112,8 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                                         if(filetocheck.size()>1000)
                                         {
                                             vplayer->openLocal(videoWorkingDir+"/"+videoList.at(globalIterator*camoffsetscounter+j));
+                                            QString str="Камера ";
+//                                            vplayer->showText(str.append(QString::number(ui->comboBox->currentIndex(),10)),1000,50,1000);
                                             currentval = (vplayer->_player->length()+camOffsets.at(j))/1000;
                                             tmp = (timeFracts.at(timeFracts.size()-1)+vplayer->_player->length()+camOffsets.at(globalIterator*camoffsetscounter+j))%1000;
                                         }
@@ -2322,6 +2342,7 @@ int MainWindow::openVideoFilesFolder(QStringList *listOfVideos)
 //        //////qDebug() << "value" << i;
 
     }
+
 //    QStringList *tmpVideos = new QStringList;
 //    tmpVideos->append(listOfVideos);
 //    listOfVideos->clear();
@@ -2915,7 +2936,7 @@ void MainWindow::on_pushButton_clicked()
     QVector <QString> thNames(0);
     QVector <int> seq(0);
 //    logList.clear();
-    //////qDebug() << "current vplayer state is" << vplayer->_player->state();
+    //////qDebug() << "current vplayer state is" << vplayer->getVideoState();
 //    pageIndex = 0;
     openLogFile(logList.at(0));
     if(timeSegment.isEmpty())
@@ -3080,24 +3101,24 @@ void MainWindow::on_pushButton_clicked()
         //////qDebug() << "not opened log files";
         //////qDebug() <<"size in here" <<logList.size();
     }
-    //////qDebug() << "current vplayer state is" << vplayer->_player->state();
+    //////qDebug() << "current vplayer state is" << vplayer->getVideoState();
 
 //     vplayer->_player->pause();
 //     vplayer2->_player->pause();
-//     while(vplayer->_player->state()!=4){}
-//     while(vplayer2->_player->state()!=4){}
-//    if(vplayer->_player->state()==3)
-//        while(vplayer->_player->state()!=4)
+//     while(vplayer->getVideoState()!=4){}
+//     while(vplayer2->getVideoState()!=4){}
+//    if(vplayer->getVideoState()==3)
+//        while(vplayer->getVideoState()!=4)
 //            vplayer->_player->pause();
-//        while(vplayer2->_player->state()!=4)
+//        while(vplayer2->getVideoState()!=4)
 //            vplayer2->_player->pause();
 //        vplayer->_player->pause();
 //        vplayer2->_player->pause();
-//        ////qDebug() << "player has state" << vplayer->_player->state();
-//        ////qDebug() << "player2 has state" << vplayer2->_player->state();
+//        ////qDebug() << "player has state" << vplayer->getVideoState();
+//        ////qDebug() << "player2 has state" << vplayer2->getVideoState();
     if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
     {
-        if(vplayer->_player->state()==3)
+        if(vplayer->getVideoState()==3)
         {
             mythread->start();
             ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
@@ -3111,12 +3132,24 @@ void MainWindow::on_pushButton_clicked()
         ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     }
     readyToPlay = true;
+    sound1IconState = vplayer->getAudioIconState();
+    sound2IconState = vplayer2->getAudioIconState();
+    if((sound1IconState!=0)&(sound2IconState!=0))
+    {
+        if(sound1IconState==sound2IconState)
+        {
+            setSoundIconState(1,2);
+            setSoundIconState(2,1);
+        }
+    }
+//    setSoundIcons();
+    updateSoundMode();
 
 }
 
 void MainWindow::setPlayer1ModePlaying()
 {
-//    if(vplayer2->_player->state()==3)
+//    if(vplayer2->getVideoState()==3)
 //    {
 //        player1Playing = true;
 //        player1Paused = false;
@@ -3129,7 +3162,7 @@ void MainWindow::setPlayer1ModePlaying()
 
 void MainWindow::setPlayer2ModePlaying()
 {
-//    if(vplayer2->_player->state()==3)
+//    if(vplayer2->getVideoState()==3)
 //    {
 //        player2Paused = false;
 //        player2Playing = true;
@@ -3143,7 +3176,7 @@ void MainWindow::setPlayer2ModePlaying()
 }
 void MainWindow::setPlayer1ModePaused()
 {
-//    if(vplayer->_player->state()==4)
+//    if(vplayer->getVideoState()==4)
 //    {
 //        player1Paused = true;
 //        player1Playing = false;
@@ -3155,7 +3188,7 @@ void MainWindow::setPlayer1ModePaused()
 }
 void MainWindow::setPlayer2ModePaused()
 {
-//    if(vplayer2->_player->state()==4)
+//    if(vplayer2->getVideoState()==4)
 //    {
 //     player2Paused = true;
 //     player2Playing = false;
@@ -3167,7 +3200,7 @@ void MainWindow::setPlayer2ModePaused()
 }
 void MainWindow::setPlayer1ModeOpening()
 {
-//    if(vplayer->_player->state()==1)
+//    if(vplayer->getVideoState()==1)
 //    {
 //        player1Playing = false;
 //        player1Paused = false;
@@ -3176,7 +3209,7 @@ void MainWindow::setPlayer1ModeOpening()
 }
 void MainWindow::setPlayer2ModeOpening()
 {
-//    if(vplayer2->_player->state()==1)
+//    if(vplayer2->getVideoState()==1)
 //    {
 //        player2Playing = false;
 //        player2Paused = false;
@@ -3185,19 +3218,19 @@ void MainWindow::setPlayer2ModeOpening()
 }
 void MainWindow::setPlayer1State()
 {
-//    if(vplayer->_player->state()==1)
+//    if(vplayer->getVideoState()==1)
 //    {
 //        player1Playing = false;
 //        player1Paused = false;
 //        player1Opening = true;
 //    }
-//    if(vplayer->_player->state()==3)
+//    if(vplayer->getVideoState()==3)
 //    {
 //        player1Playing = true;
 //        player1Paused = false;
 //        player1Opening = false;
 //    }
-//    if(vplayer->_player->state()==4)
+//    if(vplayer->getVideoState()==4)
 //    {
 //        player1Playing = false;
 //        player1Paused = true;
@@ -3207,19 +3240,19 @@ void MainWindow::setPlayer1State()
 
 void MainWindow::setPlayer2State()
 {
-//    if(vplayer2->_player->state()==1)
+//    if(vplayer2->getVideoState()==1)
 //    {
 //        player2Playing = false;
 //        player2Paused = false;
 //        player2Opening = true;
 //    }
-//    if(vplayer2->_player->state()==3)
+//    if(vplayer2->getVideoState()==3)
 //    {
 //        player2Playing = true;
 //        player2Paused = false;
 //        player2Opening = false;
 //    }
-//    if(vplayer2->_player->state()==4)
+//    if(vplayer2->getVideoState()==4)
 //    {
 //        player2Playing = false;
 //        player2Paused = true;
@@ -3229,19 +3262,19 @@ void MainWindow::setPlayer2State()
 
 void MainWindow::waitEndStateTimerTick()
 {
-//    if(vplayer->_player->state()==vplayer2->_player->state()==6)
+//    if(vplayer->getVideoState()==vplayer2->getVideoState()==6)
 //    {
 //        playersStatesSynchronized = true;
 //        waitEndStateTimer->stop();
 //    }
-//    else if(vplayer->_player->state()!=vplayer2->_player->state())
+//    else if(vplayer->getVideoState()!=vplayer2->getVideoState())
 //        playersStatesSynchronized = false;
 }
 
 void MainWindow::stateTimerTick()
 {
 //    stateTimerTickCounter++;
-//    if(vplayer->_player->state()==vplayer2->_player->state())
+//    if(vplayer->getVideoState()==vplayer2->getVideoState())
 //    {
 //        playersStatesSynchronized = true;
 //        stateTimer->stop();
@@ -3249,11 +3282,11 @@ void MainWindow::stateTimerTick()
 //    }
 //    else
 //    {
-//        if(vplayer->_player->state()==6)
-//            if(vplayer2->_player->state()!=6)
+//        if(vplayer->getVideoState()==6)
+//            if(vplayer2->getVideoState()!=6)
 //                vplayer2->_player->setTime(vplayer2->_player->length());
-//        if(vplayer2->_player->state()==6)
-//            if(vplayer->_player->state()!=6)
+//        if(vplayer2->getVideoState()==6)
+//            if(vplayer->getVideoState()!=6)
 //                vplayer->_player->setTime(vplayer->_player->length());
 //        playersStatesSynchronized = true;
 //    }
@@ -3288,8 +3321,8 @@ void MainWindow::playBothPlayers()
 //        vplayer2->_player->pause();
 //    if((isVideo1Opened)&(isVideo2Opened))
 //    {
-//      //vplayer->_player->play();
-//      //vplayer2->_player->play();
+//      //vplayer->play();
+//      //vplayer2->play();
 //    }
     ////////qDebug()()<<"both players slot";
 }
@@ -3398,8 +3431,12 @@ int MainWindow::openVideoFile(QString filename1, QString filename2)
         if(filetocheck.size()>10000)
         {
             result1 = vplayer->openLocal(videoWorkingDir+"/"+playingFile1);
+
+
             correctFramePosition();
            vplayer->_player->setTime(maxCamOffset - dataMap[pageIndex].camTimeOffsets.at(ui->comboBox->currentIndex()));
+//           QString str="Камера ";
+//           vplayer->showText(str.append(QString::number(ui->comboBox->currentIndex(),10)),1000,50,1000);
            isVideo1Opened = true;
          }
         playingFile2 = filename2;
@@ -3408,12 +3445,18 @@ int MainWindow::openVideoFile(QString filename1, QString filename2)
         if(filetocheck.size()>10000)
         {
             result2 = vplayer2->openLocal(videoWorkingDir+"/"+playingFile2);
+
+
             correctFramePosition();
             vplayer2->_player->setTime(maxCamOffset - dataMap[pageIndex].camTimeOffsets.at(ui->comboBox_2->currentIndex()));
+//            QString str="Камера ";
+//            vplayer2->showText(str.append(QString::number(ui->comboBox_2->currentIndex(),10)),1000,50,1000);
             isVideo2Opened = true;
         }
+        showCameraNameTimer->start(200);
 #endif
         timeSegmentIterator = videoList.indexOf(filename1)/(ui->comboBox->count()-1);
+        updateSoundMode();
         ////qDebug()<< "in opening video" << ui->tableWidget->currentColumn();
 //        createFakeTimeScale(0,ui->tableWidget->currentColumn());
    return 0;
@@ -3424,8 +3467,8 @@ void MainWindow::simpleDelayTimerTick()
     if(!timer->isActive())
         {
             simpleDelayTimer->stop();
-            //vplayer->_player->play();
-            //vplayer2->_player->play();
+            //vplayer->play();
+            //vplayer2->play();
             timer->start(mainTimerInterval);
 //            mythread->start();
         }
@@ -3436,13 +3479,13 @@ void MainWindow::delayTimerTick()
 {
     videoDelayms++;
     delayTimer->start(1);
-//    if((isVideo2Opened)&(vplayer->_player->state()==3))
+//    if((isVideo2Opened)&(vplayer->getVideoState()==3))
 //        vplayer->_player->pause();
-//    if((isVideo2Opened)&(vplayer2->_player->state()==3))
+//    if((isVideo2Opened)&(vplayer2->getVideoState()==3))
 //        vplayer2->_player->pause();
     if((isVideo1Opened)&(isVideo2Opened))
     {
-        if((vplayer->_player->state()==4)&(vplayer2->_player->state()==4))
+        if((vplayer->getVideoState()==4)&(vplayer2->getVideoState()==4))
         {
             videoDelayms = 0;
             delayTimer->stop();
@@ -3457,12 +3500,12 @@ void MainWindow::delayTimerTick()
 //            player1Paused = false;
 //            player2Paused = false;
 
-//            //vplayer->_player->play();
-//            //vplayer2->_player->play();
+//            //vplayer->play();
+//            //vplayer2->play();
 //            checkVideosSynchronized();
 //            while(checkVideosSynchronized()==false){}
-//            //vplayer->_player->play();
-//            //vplayer2->_player->play();
+//            //vplayer->play();
+//            //vplayer2->play();
         }
     }
 //    ////////qDebug()() << "playingModePlayer1" << playingModePlayer1;
@@ -3490,9 +3533,9 @@ bool MainWindow::checkVideosSynchronized()
 
     vplayer->_player->pause();
     vplayer2->_player->pause();
-//    while(vplayer->_player->state()!=4){}
-//    while(vplayer2->_player->state()!=4){}
-    if((vplayer->_player->state()==4)&(vplayer2->_player->state()==4))
+//    while(vplayer->getVideoState()!=4){}
+//    while(vplayer2->getVideoState()!=4){}
+    if((vplayer->getVideoState()==4)&(vplayer2->getVideoState()==4))
     {
 //    float tmpPos1 = vplayer->_player->position();
 //    float tmpPos2 = vplayer2->_player->position();
@@ -3504,20 +3547,20 @@ bool MainWindow::checkVideosSynchronized()
 
     int tmpTime1 = vplayer->_player->time();
     int tmpTime2 = vplayer2->_player->time();
-//    while(vplayer->_player->state()==3)
+//    while(vplayer->getVideoState()==3)
     ////////qDebug()() << "tmpTime1" << tmpTime1;
     ////////qDebug()() << "tmpTime2" << tmpTime2;
     if(tmpTime1>tmpTime2)
     {
         vplayer2->_player->setTime(tmpTime1);
         vplayer2->_player->pause();
-        while(vplayer2->_player->state()!=4){}
+        while(vplayer2->getVideoState()!=4){}
     }
     else if(tmpTime2>=tmpTime1)
     {
         vplayer->_player->setTime(tmpTime2);
         vplayer->_player->pause();
-        while(vplayer->_player->state()!=4){}
+        while(vplayer->getVideoState()!=4){}
     }
 
 
@@ -3526,15 +3569,15 @@ bool MainWindow::checkVideosSynchronized()
     ////////qDebug()() << "vplayer1 time after all" << vplayer->_player->time();
     ////////qDebug()() << "vplayer2 time after all" << vplayer2->_player->time();
 //    if(!player1StateBefore)
-//    if(vplayer->_player->state()==4)
-//        //vplayer->_player->play();
+//    if(vplayer->getVideoState()==4)
+//        //vplayer->play();
 ////    if(!player2StateBefore)
-//    if(vplayer2->_player->state()==4)
-//        //vplayer2->_player->play();
+//    if(vplayer2->getVideoState()==4)
+//        //vplayer2->play();
     return true;
     }
     else
-        ////////qDebug()() << "player1 state is" << vplayer->_player->state() << " player 2 state is"<<vplayer2->_player->state();
+        ////////qDebug()() << "player1 state is" << vplayer->getVideoState() << " player 2 state is"<<vplayer2->getVideoState();
     return false;
 
 }
@@ -3550,7 +3593,7 @@ int MainWindow::changeVideo1(QString filename)
         correctFramePosition();
         vplayer2->_player->pause();
         playingFile1 = filename;
-//        while(vplayer->_player->state()!=5){}
+//        while(vplayer->getVideoState()!=5){}
 
 
 //        isVideo1Opened = false;
@@ -3578,8 +3621,8 @@ int MainWindow::changeVideo2(QString filename)
         vplayer->_player->pause();
         playingFile2 = filename;
 //        isVideo2Opened = false;
-//        while(vplayer2->_player->state()!=5){}
-//        if(vplayer2->_player->state()==3)
+//        while(vplayer2->getVideoState()!=5){}
+//        if(vplayer2->getVideoState()==3)
 //        {
 //            vplayer2->_player->pause();
 //            vplayer->_player->pause();
@@ -3590,15 +3633,15 @@ int MainWindow::changeVideo2(QString filename)
         if(filetocheck.size()>10000)
         {
 //        result2 = vplayer2->openLocal(videoWorkingDir+"/"+playingFile2);
-//        while(vplayer2->_player->state()!=3){}
+//        while(vplayer2->getVideoState()!=3){}
 //            vplayer2->_player->pause();
-//        while(vplayer->_player->state()!=3){}
+//        while(vplayer->getVideoState()!=3){}
 //            vplayer->_player->pause();
 //        vplayer2->_player->setTime(vplayer->_player->time());
         ////////qDebug()() << vplayer->_player->time();
         ////////qDebug()() << vplayer2->_player->time();
-        ////////qDebug()() << vplayer->_player->state();
-        ////////qDebug()() << vplayer2->_player->state();
+        ////////qDebug()() << vplayer->getVideoState();
+        ////////qDebug()() << vplayer2->getVideoState();
 //        vplayer2->_player->setPosition(vplayer->_player->position());
 //        delayTimer->start(1);
         }
@@ -3606,38 +3649,38 @@ int MainWindow::changeVideo2(QString filename)
    }
    ////////qDebug()() << vplayer->_player->time();
    ////////qDebug()() << vplayer2->_player->time();
-   ////////qDebug()() << vplayer->_player->state();
-   ////////qDebug()() << vplayer2->_player->state();
+   ////////qDebug()() << vplayer->getVideoState();
+   ////////qDebug()() << vplayer2->getVideoState();
    return result2;
 }
 bool MainWindow::synchronizePlayersStates()
 {
 
     ////////qDebug()() << "synchronizing states";
-    ////////qDebug()() << "player1 state is" << vplayer->_player->state();
-    ////////qDebug()() << "player2 state is" << vplayer2->_player->state();
+    ////////qDebug()() << "player1 state is" << vplayer->getVideoState();
+    ////////qDebug()() << "player2 state is" << vplayer2->getVideoState();
     if(playersStatesSynchronized)
         return true;
     else
     {
         stateTimerTickCounter = 0;
-        if((vplayer->_player->state()==3)&(vplayer2->_player->state()==6))
+        if((vplayer->getVideoState()==3)&(vplayer2->getVideoState()==6))
         {
-//            vplayer->_player->stop();
+//            vplayer->stop();
 //            waitEndStateTimer->start(1);
         }
-        if((vplayer->_player->state()==6)&(vplayer2->_player->state()==3))
+        if((vplayer->getVideoState()==6)&(vplayer2->getVideoState()==3))
         {
-//            vplayer2->_player->stop();
+//            vplayer2->stop();
 //            waitEndStateTimer->start(1);
         }
-        if((vplayer->_player->state()==4)&(vplayer2->_player->state()==3))
+        if((vplayer->getVideoState()==4)&(vplayer2->getVideoState()==3))
         {
             vplayer2->_player->pause();
         }
-        else if((vplayer->_player->state()==3)&(vplayer2->_player->state()==4))
+        else if((vplayer->getVideoState()==3)&(vplayer2->getVideoState()==4))
         {
-            //vplayer2->_player->play();
+            //vplayer2->play();
         }
         stateTimer->start(1);
         while((stateTimerTickCounter<100)|(!playersStatesSynchronized)){}
@@ -3658,15 +3701,15 @@ void MainWindow::video1Ended()
     player1Paused = false;
     player1Playing = false;
 //    isVideo1Opened = false;
-    if(vplayer2->_player->state()==6)
+    if(vplayer2->getVideoState()==6)
     {
         timer->stop();
         mythread->exit();
 
     }
 
-    ////////qDebug()() <<"current player 1 state is" <<vplayer->_player->state();
-    ////////qDebug()() <<"current player 2 state is" <<vplayer2->_player->state();
+    ////////qDebug()() <<"current player 1 state is" <<vplayer->getVideoState();
+    ////////qDebug()() <<"current player 2 state is" <<vplayer2->getVideoState();
     for(int i = 0; i < videoList.size(); i++)
     {
         if(videoList[i]==playingFile1)
@@ -3677,7 +3720,7 @@ void MainWindow::video1Ended()
     }
     ////////qDebug()() << "index1"<< index1<<" index2"<< index2;
 
-    if(vplayer->_player->state()==vplayer2->_player->state())
+    if(vplayer->getVideoState()==vplayer2->getVideoState())
     {
     if((index1+ui->comboBox->count()-1<videoList.size())&(index2+ui->comboBox->count()-1<videoList.size()))
         {
@@ -3691,7 +3734,7 @@ void MainWindow::video1Ended()
         }
         playersStatesSynchronized = true;
     }
-    if(vplayer->_player->state()==3)
+    if(vplayer->getVideoState()==3)
         mythread->start();
     //////qDebug() << "logVideoDelta" << logVideoDelta;
 //    else
@@ -3704,13 +3747,13 @@ void MainWindow::video2Ended()
     player2Paused = false;
     player2Playing = false;
 //    isVideo2Opened = false;
-    if(vplayer->_player->state()==6)
+    if(vplayer->getVideoState()==6)
     {
         timer->stop();
 //        mythread->exit();
         //////qDebug() << ui->horizontalSlider->value();
     }
-    ////////qDebug()() << "current player 2 state is" <<vplayer2->_player->state();
+    ////////qDebug()() << "current player 2 state is" <<vplayer2->getVideoState();
     for(int i = 0; i < videoList.size(); i++)
     {
         if(videoList[i]==playingFile1)
@@ -3720,7 +3763,7 @@ void MainWindow::video2Ended()
 
     }
     ////////qDebug()() << "index1"<< index1<<" index2"<< index2;
-    if(vplayer->_player->state()==vplayer2->_player->state())
+    if(vplayer->getVideoState()==vplayer2->getVideoState())
     {
     if((index1+ui->comboBox->count()-1<videoList.size())&(index2+ui->comboBox->count()-1<videoList.size()))
         {
@@ -3739,43 +3782,12 @@ void MainWindow::video2Ended()
 }
 void MainWindow::on_playButton_clicked()
 {
-//    vplayer->_player->pause();
-//    vplayer2->_player->pause();
-//    while(vplayer->_player->state()!=4){}
-//    while(vplayer2->_player->state()!=4){}
-//    if(vplayer->_player->state()==3)
+
+//    if(timeCells[ui->tableWidget->columnCount()-1].cellType==0)
 //    {
-//        vplayer->_player->pause();
-//        while(vplayer->_player->state()!=4){}
+//        vplayer->togglePause();
+//        vplayer2->togglePause();
 //    }
-//    else if(vplayer->_player->state()==4)
-//    {
-//            //vplayer->_player->play();
-//            while(vplayer->_player->state()!=3){}
-//    }
-//    if(vplayer2->_player->state()==3)
-//    {
-//        vplayer2->_player->pause();
-//        while(vplayer2->_player->state()!=4){}
-//    }
-//    else if(vplayer2->_player->state()==4)
-//    {
-//            //vplayer2->_player->play();
-//            while(vplayer->_player->state()!=3){}
-//    }
-//    //////qDebug() <<"starting time 1" <<vplayer->_player->time()<<"offset from most offsetted cam"<<maxCamOffset - camOffsets.at(ui->comboBox->currentIndex()-1);
-//    //////qDebug() <<"starting time 2" <<vplayer2->_player->time();
-//    //////qDebug() << "player1 offset" << camOffsets.at(ui->comboBox->currentIndex()-1);
-//    //////qDebug() << "player2 offset" << camOffsets.at(ui->comboBox_2->currentIndex()-1);
-////    delayMs = (vplayer2->_player->time() + camOffsets.at(ui->comboBox_2->currentIndex()-1))/10;
-//    //////qDebug() << "delayMs" << delayMs;
-    //////qDebug() << "lengthOfScale" << ui->horizontalSlider->maximum();
-    //qDebug() << "pause toggled" << mythread->isRunning();
-    if(timeCells[ui->tableWidget->columnCount()-1].cellType==0)
-    {
-        vplayer->_player->togglePause();
-        vplayer2->_player->togglePause();
-    }
         //delayMs = (vplayer->_player->time()+ flowingOffset+ camOffsets.at(ui->comboBox->currentIndex()-1))/10;
         if(mythread->isRunning())
             {
@@ -3793,7 +3805,7 @@ void MainWindow::on_playButton_clicked()
                 getTimeTimer->start(1);
 //                ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
             }
-    playButtonPressed=!playButtonPressed;
+//    playButtonPressed=!playButtonPressed;
 #ifdef GLOBALMODE
 //    vplayer->pause();
 //    vplayer2->pause();
@@ -3943,7 +3955,7 @@ void MainWindow::on_nextTimeSegment_clicked()
 //            mythread->exit();
 //            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 //        }
-//        if(vplayer->_player->state()==3)
+//        if(vplayer->getVideoState()==3)
 //        {
 //            mythread->start();
 //            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
@@ -4003,7 +4015,7 @@ void MainWindow::setVideoTime()//its my handmade slot
     }
     if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
     {
-        if(vplayer->_player->state()==3)
+        if(vplayer->getVideoState()==3)
         {
             if(mythread->isFinished())
             {
@@ -4058,8 +4070,8 @@ void MainWindow::on_previousTimeSegment_clicked()
 //    }
 ////    vplayer->_player->pause();
 ////    vplayer2->_player->pause();
-////    while(vplayer->_player->state()!=4){}
-////    while(vplayer2->_player->state()!=4){}
+////    while(vplayer->getVideoState()!=4){}
+////    while(vplayer2->getVideoState()!=4){}
 //        openVideoFile(Iter1.key(),Iter2.key());
 //        openLogFile(dataMap[pageIndex].logName);
 //        if(mythread->isRunning())
@@ -4067,7 +4079,7 @@ void MainWindow::on_previousTimeSegment_clicked()
 //            mythread->exit();
 //            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 //        }
-//        if(vplayer->_player->state()==3)
+//        if(vplayer->getVideoState()==3)
 //        {
 //            mythread->start();
 //            ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
@@ -4253,23 +4265,16 @@ void MainWindow::on_action_4_triggered()
 
     if(mythread->isRunning())
         ui->playButton->click();
-//    if(isFolderOpened)
-//        terminateAll();
         selectLogFolder();
+        qDebug() << "logfileerror"<< LogFileError;
+        if(LogFileError==2)
+        {
+            qDebug() << "log folder error!!!!!!!!!!!!";
+        }
         selectVideoFolder();
-
-//    }
-//    else
-//    {
-
-//        ////qDebug() << "we gotta error here!";
-//    }
     this->setWindowTitle(logWorkingDir);
     if(logWorkingDir!="")
         ui->pushButton->click();
-    ////qDebug() << "directory is selected";
-//    delayMs = 10;
-//    updateTime();
     if(threadTimer->isActive())
     {
         ////qDebug() << "timer is running";
@@ -4309,17 +4314,36 @@ void MainWindow::on_comboBox_2_currentIndexChanged(int index)
                     Iter2.next();
                     tmp2++;
                 }
-                if(vplayer->_player->state()==4)
-                    vplayer->_player->togglePause();
+                if(vplayer->getVideoState()==4)
+                    vplayer->togglePause();
             vplayer2->openLocal(videoWorkingDir+"/"+Iter2.key());
+            showCameraNameTimer->start(200);
+//            QString str="Камера ";
+//            vplayer2->showText(str.append(QString::number(ui->comboBox_2->currentIndex(),10)),1000,50,1000);
+
             isVideo2Opened = true;
             vplayer2->_player->setTime(tmptime);
             if(mythread->isRunning())
                 mythread->exit();
                 if(mythread->isRunning())
                     mythread->exit();
-//                ////qDebug() << "player1 current state" << vplayer->_player->state();
-//                ////qDebug() << "player2 current state" << vplayer2->_player->state();
+//                ////qDebug() << "player1 current state" << vplayer->getVideoState();
+//                ////qDebug() << "player2 current state" << vplayer2->getVideoState();
+                sound1IconState = vplayer->getAudioIconState();
+                sound2IconState = vplayer2->getAudioIconState();
+                if((sound1IconState!=0)&(sound2IconState!=0))
+                {
+                    if(sound1IconState==sound2IconState)
+                    {
+                        if(sound1IconState!=1)
+                        {
+                            setSoundIconState(2,2);
+                            setSoundIconState(1,1);
+                        }
+                    }
+                }
+//                setSoundIcons();
+                updateSoundMode();
         }
         lastIndex2 = index;
     }
@@ -4362,8 +4386,8 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
         QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
     //    vplayer->_player->pause();
     //    vplayer2->_player->pause();
-    //    while(vplayer->_player->state()!=4){}
-    //    while(vplayer2->_player->state()!=4){}
+    //    while(vplayer->getVideoState()!=4){}
+    //    while(vplayer2->getVideoState()!=4){}
     //    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
 //        ////qDebug() << "index of combobox1 changed" << index;
         if(index==ui->comboBox_2->currentIndex())
@@ -4389,9 +4413,13 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
     //            while(tmp2<ui->comboBox_2->currentIndex()=1)
     //                Iter2++;
     //                openVideoFile(Iter1.key(),Iter2.key());
-                if(vplayer2->_player->state()==4)
-                    vplayer2->_player->togglePause();
+                if(vplayer2->getVideoState()==4)
+                    vplayer2->togglePause();
                 vplayer->openLocal(videoWorkingDir+"/"+Iter1.key());
+                showCameraNameTimer->start(200);
+//                QString str="Камера ";
+//                vplayer->showText(str.append(QString::number(ui->comboBox->currentIndex(),10)),1000,50,1000);
+
     //               // openLogFile(dataMap[pageIndex].logName);
     //                if(mythread->isRunning())
     //                    mythread->exit();
@@ -4400,8 +4428,8 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
                 isVideo1Opened = true;
     //            delayTimer->start(1);
                 vplayer->_player->setTime(tmptime);
-    //            vplayer->_player->togglePause();
-    //            vplayer2->_player->togglePause();
+    //            vplayer->togglePause();
+    //            vplayer2->togglePause();
     //            if(mythread->isFinished())
     //                mythread->start();
                 if(mythread->isRunning())
@@ -4411,19 +4439,34 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
     //        }
         }
         lastIndex1 =index;
-    //    if(vplayer->_player->state()!=4)
+    //    if(vplayer->getVideoState()!=4)
     //        vplayer->_player->pause();
-    //    if(vplayer2->_player->state()!=4)
+    //    if(vplayer2->getVideoState()!=4)
     //        vplayer2->_player->pause();
-//        ////qDebug() << "player has state" << vplayer->_player->state();
-//        ////qDebug() << "player2 has state" << vplayer2->_player->state();
-    //    if(vplayer->_player->state()!=vplayer2->_player->state())
-    //        vplayer->_player->togglePause();
+//        ////qDebug() << "player has state" << vplayer->getVideoState();
+//        ////qDebug() << "player2 has state" << vplayer2->getVideoState();
+    //    if(vplayer->getVideoState()!=vplayer2->getVideoState())
+    //        vplayer->togglePause();
 
     //    else
     //    {
     //        ui->comboBox->setCurrentIndex(5-index);
     //    }
+        sound1IconState = vplayer->getAudioIconState();
+        sound2IconState = vplayer2->getAudioIconState();
+//        setSoundIcons();
+        if((sound1IconState!=0)&(sound2IconState!=0))
+        {
+            if(sound1IconState==sound2IconState)
+            {
+                if(sound1IconState!=1)
+                {
+                    setSoundIconState(1,2);
+                    setSoundIconState(2,1);
+                }
+            }
+        }
+        updateSoundMode();
     }
 }
 
@@ -4446,7 +4489,31 @@ void MainWindow::on_frameBackwardButton_clicked()
 void MainWindow::on_nextFrameButton_clicked()
 {
 //    vplayer->s
+    qDebug() << "show camera names!!!";
+    QString str="    Камера ";
+    str.append(QString::number(ui->comboBox->currentIndex(),10));
+    QString soundstr = "\nЗвук ";
+    if(sound1IconState==0)
+        soundstr.append("отсутствует");
+    if(sound1IconState==1)
+        soundstr.append("выключен");
+    if(sound1IconState==2)
+        soundstr.append("включён");
+    str.append(soundstr);
+    vplayer->showText(str,2000,50,2000);
+    str="    Камера ";
+    str.append(QString::number(ui->comboBox_2->currentIndex(),10));
+    soundstr = "\nЗвук ";
+    if(sound2IconState==0)
+        soundstr.append("отсутствует");
+    if(sound2IconState==1)
+        soundstr.append("выключен");
+    if(sound2IconState==2)
+        soundstr.append("включён");
+    str.append(soundstr);
+    vplayer2->showText(str,2000,50,2000);
     tickCounter++;
+    showCameraNameTimer->stop();
     updateTime();
 }
 
@@ -4495,10 +4562,10 @@ void MainWindow::on_pushButton_2_clicked()
 
 //    vplayer->_player->resume();
 //    vplayer2->_player->resume();
-//    while(vplayer->_player->state()!=3){}
-//    while(vplayer2->_player->state()!=3){}
-//    vplayer->_player->togglePause();
-//    vplayer2->_player->togglePause();
+//    while(vplayer->getVideoState()!=3){}
+//    while(vplayer2->getVideoState()!=3){}
+//    vplayer->togglePause();
+//    vplayer2->togglePause();
 
 //    time1 = vplayer->_player->time();
 //    time2 = vplayer2->_player->time();
@@ -4517,28 +4584,28 @@ void MainWindow::on_pushButton_2_clicked()
 
 //    vplayer->_player->resume();
 //    vplayer2->_player->resume();
-//    while(vplayer->_player->state()!=3){}
-//    while(vplayer2->_player->state()!=3){}
-//    vplayer->_player->togglePause();
-//    vplayer2->_player->togglePause();
+//    while(vplayer->getVideoState()!=3){}
+//    while(vplayer2->getVideoState()!=3){}
+//    vplayer->togglePause();
+//    vplayer2->togglePause();
 //    vplayer->_player->pause();
 //    vplayer2->_player->pause();
-//    while((vplayer->_player->state()==3)&(vplayer2->_player->state()==3)){}
+//    while((vplayer->getVideoState()==3)&(vplayer2->getVideoState()==3)){}
 //    for(int i =0; i < 2000; i++)
 //    {
 //        vplayer->_player->pause();
 //        vplayer2->_player->pause();
-//        while(vplayer->_player->state()!=4){}
-//        while(vplayer2->_player->state()!=4){}
+//        while(vplayer->getVideoState()!=4){}
+//        while(vplayer2->getVideoState()!=4){}
 //        vplayer->_player->pause();
 //        vplayer2->_player->pause();
-//        while(vplayer->_player->state()!=4){}
-//        while(vplayer2->_player->state()!=4){}
+//        while(vplayer->getVideoState()!=4){}
+//        while(vplayer2->getVideoState()!=4){}
 //    }
     ////////qDebug()() << vplayer->_player->time();
     ////////qDebug()() << vplayer2->_player->time();
-    ////////qDebug()() << vplayer->_player->state();
-    ////////qDebug()() << vplayer2->_player->state();
+    ////////qDebug()() << vplayer->getVideoState();
+    ////////qDebug()() << vplayer2->getVideoState();
 }
 
 void MainWindow::on_comboBox_activated(const QString &arg1)
@@ -4554,8 +4621,8 @@ void MainWindow::on_horizontalSlider_sliderReleased()
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
     {
-        vplayer->_player->play();
-        vplayer2->_player->play();
+        vplayer->play();
+        vplayer2->play();
     }
 }
 
@@ -4574,8 +4641,11 @@ int MainWindow::setPause()
     {
         ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         mythread->exit();
-        vplayer->_player->pause();
-        vplayer2->_player->pause();
+        if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
+        {
+            vplayer->pause();
+            vplayer2->pause();
+        }
     }
     return 0;
 }
@@ -4585,8 +4655,11 @@ int MainWindow::setPlay()
     {
         ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
         mythread->start();
-        vplayer->_player->play();
-        vplayer2->_player->play();
+        if(timeCells[ui->tableWidget->currentColumn()].cellType==0)
+        {
+            vplayer->play();
+            vplayer2->play();
+        }
     }
     return 0;
 }
@@ -4865,8 +4938,8 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 //                {
 //                    ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 //                    mythread->start();
-//                    vplayer->_player->play();
-//                    vplayer2->_player->play();
+//                    vplayer->play();
+//                    vplayer2->play();
 //                }
 //                    ui->playButton->click();
 //                ui->line_5->setAttribute(Qt::WA_TransparentForMouseEvents,false);
@@ -5398,7 +5471,7 @@ void MainWindow::moveToAnotherTimeSegment(int column)
                     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
                     correctFramePosition();
                 }
-                if(vplayer->_player->state()==3)
+                if(vplayer->getVideoState()==3)
                 {
                     mythread->start();
                     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
@@ -5479,3 +5552,131 @@ void MainWindow::paintEvent(QPaintEvent *event)
 //    tmp.setSize(ui->line->rect().size());
 }
 
+
+void MainWindow::on_screen1SoundButton_clicked()
+{
+    toggleSoundState(1);
+    updateSoundMode();
+    showCameraNameTimer->start(200);
+}
+
+void MainWindow::on_screen2SoundButton_clicked()
+{
+    toggleSoundState(2);
+     updateSoundMode();
+     showCameraNameTimer->start(200);
+}
+
+void MainWindow::toggleSoundState(int count)
+{
+    if(count==1)
+    {
+        if(sound1IconState>0)
+        {
+            if(sound1IconState==1)
+            {
+                sound1IconState = 2;
+                if(sound2IconState>0)
+                    sound2IconState = 1;
+            }
+            else
+            {
+                sound1IconState = 1;
+                if(sound2IconState>0)
+                    sound2IconState = 2;
+            }
+        }
+    }
+    else
+    {
+        if(sound2IconState>0)
+        {
+            if(sound2IconState==1)
+            {
+                sound2IconState = 2;
+                if(sound1IconState>0)
+                    sound1IconState = 1;
+            }
+            else
+            {
+                sound2IconState = 1;
+                if(sound1IconState>0)
+                    sound1IconState = 2;
+            }
+        }
+    }
+    setSoundIcons();
+}
+void MainWindow::setSoundIconState(int snum, int state)
+{
+    if(snum==1)
+    {
+        sound1IconState = state;
+    }
+    if(snum==2)
+    {
+        sound2IconState = state;
+    }
+}
+
+void MainWindow::setSoundIcons()
+{
+    switch (sound1IconState)
+    {
+        case 1:
+            ui->screen1SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
+            ui->screen1SoundButton->setEnabled(true);
+            break;
+        case 2:
+            ui->screen1SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+            ui->screen1SoundButton->setEnabled(true);
+            break;
+        default:
+            ui->screen1SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+            ui->screen1SoundButton->setEnabled(false);
+            break;
+    }
+    switch (sound2IconState)
+    {
+        case 1:
+            ui->screen2SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
+            ui->screen2SoundButton->setEnabled(true);
+            break;
+        case 2:
+            ui->screen2SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+            ui->screen2SoundButton->setEnabled(true);
+            break;
+        default:
+            ui->screen2SoundButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+            ui->screen2SoundButton->setEnabled(false);
+            break;
+    }
+}
+
+void MainWindow::updateSoundMode()
+{
+    qDebug() << "updating sound mode" << sound1IconState << sound2IconState;
+    if(sound1IconState>0)
+    {
+        if(sound1IconState==1)
+            vplayer->setAudioMuted(true);
+            //vplayer->setAudioState(Vlc::Paused);
+        else
+        {
+            vplayer->setAudioMuted(false);
+//            vplayer->setAudioState(Vlc::Playing);
+        }
+    }
+//    else
+//        vplayer->setAudioState(Vlc::Stopped);
+    if(sound2IconState>0)
+    {
+        if(sound2IconState==1)
+            vplayer2->setAudioMuted(true);
+        else
+            vplayer2->setAudioMuted(false);
+    }
+//    else
+//        vplayer2->setAudioState(Vlc::Stopped);
+    setSoundIcons();
+}

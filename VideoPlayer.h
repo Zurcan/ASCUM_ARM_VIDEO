@@ -12,6 +12,7 @@
 #include <vlc-qt/WidgetSeek.h>
 #include <vlc-qt/MediaList.h>
 #include <vlc-qt/Video.h>
+#include <vlc-qt/Audio.h>
 namespace video {
 class VideoPlayer;
 }
@@ -27,11 +28,11 @@ class VideoPlayer;
 //class QObject;
 //class Common;
 
-class VideoPlayer
+class VideoPlayer//: public QMainWindow
 {
 //Q_OBJECT
 public:
-
+   // explicit VideoPlayer(QWidget *parent = 0);
     VlcMediaPlayer *_player;
 //    VlcMediaPlayer *_player_2;
      VlcMedia *_media;
@@ -47,7 +48,15 @@ public:
     int getVideoLength();
     float getPosition();
     int setPlayerPosition(float pos);
-    void showText(QString t);
+    void setAudioState(int state);
+    void togglePause();
+    void play();
+    void showText(QString t,int timeout, int fontsize,int refresh);
+    int getAudioIconState();//returns soundtrack state it may be 3 vals: 0 - track is disabled , 1 - track is muted, 2 - track is enabled
+    int getAudioState();
+    int getVideoState(); //returns video player vlc state
+    void setAudioMuted(bool);
+    void setAudioVolume(int);
     QSize getVideoSize();
     QRect getGeometry();
     QString getCurrentMediaLocation();
@@ -58,10 +67,13 @@ private:
     VlcWidgetVideo *video;
 //    VlcWidgetVideo *video_2;
     VlcInstance *_instance;
-//    VlcInstance *_instance_2;
+    VlcInstance *_audioinstance;
+    VlcMedia *_audio;
+    VlcMediaPlayer *_audioplayer;
 
 //    VlcMedia *_media_2;
     bool ispaused;
+    int volume = 100;
 
 //    void openUrl();
 

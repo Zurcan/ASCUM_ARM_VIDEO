@@ -292,6 +292,9 @@ private:
     int widget1Y;
     int lastVal;
     int delayMsToSet = 0;
+    int sound1IconState = 0;//current state of sound on screen1 it may be in 3 states 0 - no soundtrack, 1 = soundtrack muted, 2 = soundtrack playing
+    int sound2IconState = 0;//same as above
+
     bool firstPass = true;
     bool videoOnly = true;
     bool offsetsAvailable = true;
@@ -326,6 +329,7 @@ private:
     QTimer *simpleDelayTimer;
     QTimer *getTimeTimer;
     QTimer *threadTimer;
+    QTimer *showCameraNameTimer;
 
     QRect currentWidget1Geometry;
     QRect currentWidget2Geometry;
@@ -468,6 +472,11 @@ private slots:
     void correctFramePosition();
     void correctCellSeekerPosition(int newPos);
     void terminateAll();
+    int checkFolderName(QString);
+    void toggleSoundState(int count);
+    void setSoundIconState(int,int);
+    void updateSoundMode();
+    void setSoundIcons();
 //    void waitVideo2EndMode();
     void simpleDelayTimerTick();
     void setPlayer1ModePlaying();
@@ -545,6 +554,10 @@ private slots:
 //    void on_tableWidget_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
 
 //    void on_tableWidget_cellClicked(int row, int column);
+
+    void on_screen1SoundButton_clicked();
+
+    void on_screen2SoundButton_clicked();
 
 protected:
     void paintEvent(QPaintEvent *);
