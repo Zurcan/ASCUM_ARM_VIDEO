@@ -371,6 +371,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget->setItemDelegate(new BackgroundDelegate(this));
     ui->tableWidget->setStyleSheet("selection-background-color: rgba(128, 128, 128, 40);");
     timeCellIndex=0;
+    camButtonsLayout1 = new QGridLayout();
+    camButtonsLayout2 = new QGridLayout();
+    ui->widget_3->setLayout(camButtonsLayout1);
+    ui->widget_4->setLayout(camButtonsLayout2);
+
+//    QGridLayout *lay = new QGridLayout();
+
+//    ui->widget_3->setLayout(lay);
+//    QPushButton *tmpbtn1 = new QPushButton(ui->widget_3);
+//    QPushButton *tmpbtn2 = new QPushButton(ui->widget_3);
+//    QPushButton *tmpbtn3 = new QPushButton(ui->widget_3);
+//    QPushButton *tmpbtn4 = new QPushButton(ui->widget_3);
+//    QPushButton *tmpbtn5 = new QPushButton(ui->widget_3);
+//    QPushButton *tmpbtn6 = new QPushButton(ui->widget_3);
+//    lay->addWidget(tmpbtn1,0,0);
+//    lay->addWidget(tmpbtn2,0,1);
+//    lay->addWidget(tmpbtn3,0,2);
+//    lay->addWidget(tmpbtn4,0,3);
+//    lay->addWidget(tmpbtn5,0,4);
+//    lay->addWidget(tmpbtn6,1,2);
 //    ////qDebug() << p.color(QPalette::Foreground);
 //    QApplication::setPalette(p);
 //    ui->checkBox->setPalette(p);
@@ -1984,7 +2004,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
 //    ////qDebug() << "WTF??!";
     int timeIndex=0; // 0=Time; 1 = StartTime; 2 = ShutdownTime;
     int timeFractIndex = 0,currentval=0;//0 = TimeFrac; 1 = StartTimeFrac; 2 = ShutdownTimeFrac;
-    int camoffsetscounter=0;
+    int camoffsetscounter=0,counter=0;
     short int tmp=0;
     if(tmpErr==0)
     {
@@ -1993,6 +2013,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                 interpreter->interpreterRecordsCount=log->segmentHeader.size/log->segmentHeader.recordSize;
                 interpreter->setInterpretationTable(buffArr1,interpreter->interpreterRecordsCount);
 //                ////qDebug() << "WTF??";
+
                 for(int i =0; i <interpreter->interpreterRecordsCount; i++)
                 {
 //                    ////qDebug() << "name" << i << interpreter->TInterpItemArray[i].name;
@@ -2002,13 +2023,45 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                         {
                             ui->comboBox->addItem(QString::fromLocal8Bit(interpreter->TInterpItemArray[i].name));
                             ui->comboBox_2->addItem(QString::fromLocal8Bit(interpreter->TInterpItemArray[i].name));
+                            cameraButton camBtn1,camBtn2;
+                            camBtn1.camButton = new QPushButton(ui->widget_3);
+                            camBtn1.enabled = false;
+                            camBtn1.active = false;
+                            camBtn1.camButton->setText("Камера"+QString::number(counter+1,10));
+                            camBtn1.camButton->raise();
+                            camBtn1.camButton->setAutoFillBackground(true);
+                            camBtn1.camButton->setStyleSheet("QPushButton{ background-color : white; color : black; }");
+                            camBtn2.camButton = new QPushButton(ui->widget_3);
+                            camBtn2.enabled = false;
+                            camBtn2.active = false;
+                            camBtn2.camButton->setText("Камера"+QString::number(counter+1,10));
+                            camBtn2.camButton->raise();
+                            camBtn2.camButton->setAutoFillBackground(true);
+                            camBtn2.camButton->setStyleSheet("QPushButton{ background-color : white; color : black; }");
+//                            QPalette pal = camBtn.camButton->palette();
+//                            pal.setColor(Qt::Widget,Qt::ForegroundRole);
+//                            camBtn.camButton->setPalette(pal);
+//                            camButtons1.append({QPushButton::QPushButton(ui->widget_3),false,false});
 
+                            camButtonsLayout1->addWidget(camBtn1.camButton,counter/5,counter%5+1);
+                            camButtonsLayout2->addWidget(camBtn2.camButton,counter/5,counter%5+1);
+                            qDebug() << "i%5"<< counter%5 << counter;
+                            camButtons1.append(camBtn1);
+                            camButtons2.append(camBtn2);
+//                            camButtonsLayout1->addWidget(camButtons1[i].camButton,i/5,i%5);
+//                            ui->gridLayout->addWidget(camButtons1[i].camButton,i/5,i%5);
+//                            qDebug() << camOffsets.at(i);
 //                            ////qDebug() << "current index i " << i;
+                            counter++;
                         }
                     }
 
 
                 }
+                camButtonsLayout1->addWidget(ui->screen1SoundButton,0,0);
+                ui->screen1SoundButton->setVisible(true);
+                camButtonsLayout2->addWidget(ui->screen2SoundButton,0,0);
+                ui->screen2SoundButton->setVisible(true);
                /*
                 *from here we start to processing data from small table
                 */

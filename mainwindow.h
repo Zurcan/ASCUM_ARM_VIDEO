@@ -372,6 +372,18 @@ private:
     QVector <int> videoTimes;
     QVector <int> logEndTimes;
     QVector <int> offsetsCounter;
+//    QVector <QPushButton> camButtons1;
+//    QVector <QPushButton> camButtons2;
+    struct cameraButton
+    {
+        QPushButton *camButton;
+        bool enabled;
+        bool active;
+    };
+    QVector <cameraButton> camButtons1;
+    QVector <cameraButton> camButtons2;
+    QGridLayout *camButtonsLayout1;
+    QGridLayout *camButtonsLayout2;
 //    QVector <float> columnWidthes;                //relative to total time length column width
 //    QVector <int> pageVector;                     //consists of ints each of it means what pageIndex is in current cell
 //    QVector <int> pageFlagVector;                 //consists of ints each of it means what behaviour should be at current cell processing 0 - play video 1 - show parameters 2 - ok do nothing 3 - error do nothing
@@ -380,6 +392,8 @@ private:
 
 //    FlyingFrame *myFrame;
 //    MyThread *thrd;
+
+
     struct dataPage
     {
         time_t timeEdge1;
