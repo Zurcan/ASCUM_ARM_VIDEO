@@ -165,6 +165,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     //this->setCentralWidget(ui->widget);
+    ui->label->setVisible(false);
+    ui->label_2->setVisible(false);
+    ui->comboBox->setVisible(false);
+    ui->comboBox_2->setVisible(false);
+    ui->screen1SoundButton->setVisible(false);
+    ui->screen2SoundButton->setVisible(false);
 
     videoButton = new QPushButton(ui->mainToolBar);
     ui->nextFrameButton->setVisible(true);
@@ -375,7 +381,11 @@ MainWindow::MainWindow(QWidget *parent) :
     camButtonsLayout2 = new QGridLayout();
     ui->widget_3->setLayout(camButtonsLayout1);
     ui->widget_4->setLayout(camButtonsLayout2);
-
+    camButtonsLayout1->setContentsMargins(3,3,3,3);
+    camButtonsLayout2->setContentsMargins(3,3,3,3);
+    makeUpSlider();
+    this->clearFocus();
+    ui->playButton->setFocus();
 //    QGridLayout *lay = new QGridLayout();
 
 //    ui->widget_3->setLayout(lay);
@@ -520,6 +530,65 @@ void MainWindow::correctCellSeekerPosition(int newPos)
 
 }
 
+void MainWindow::makeUpSlider()
+{
+
+    ui->horizontalSlider->setStyleSheet(
+                "QSlider::groove:horizontal {"
+                "border: 1px solid #bbb;"
+                "background: white;"
+                "height: 10px;"
+               // "border-radius: 4px;"
+                "}"
+
+                "QSlider::sub-page:horizontal {"
+                "background: white;"//qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,stop: 0 #00EE00, stop: 1 #00CD00);"
+                "background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,stop: 0 #00EE00, stop: 1 #00CD00);"
+                "border: 1px solid #777;"
+                " height: 10px;"
+              //  " border-radius: 4px;"
+                " }"
+
+                "QSlider::add-page:horizontal {"
+                "background: #fff;"
+                " border: 1px solid #777;"
+                "height: 10px;"
+            //    "border-radius: 4px;"
+                " }"
+
+                "QSlider::handle:horizontal {"
+                " background: qlineargradient(x1:0, y1:0, x2:1, y2:1,stop:0 #eee, stop:1 #ccc);"
+                " border: 1px solid #777;"
+                "width: 1px;"
+                "margin-top: -2px;"
+                " margin-bottom: -2px;"
+              //  "border-radius: 4px;"
+                " }"
+
+                " QSlider::handle:horizontal:hover {"
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:1,stop:0 #fff, stop:1 #ddd);"
+                " border: 1px solid #444;"
+               // "border-radius: 4px;"
+                "}"
+
+                "QSlider::sub-page:horizontal:disabled {"
+                "background: #bbb;"
+                "border-color: #999;"
+                " }"
+
+                "QSlider::add-page:horizontal:disabled {"
+                "background: #eee;"
+                "border-color: #999;"
+                "}"
+
+                "QSlider::handle:horizontal:disabled {"
+                "background: #eee;"
+                "border: 1px solid #aaa;"
+               // "border-radius: 4px;"
+                "}"
+                                        );
+}
+
 void MainWindow::correctFramePosition()
 {
 //    ui->line->setVisible(true);
@@ -582,6 +651,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     //myFrame->setAttribute(Qt::WA_TransparentForMouseEvents,true);
 //    if(currentWidget2Geometry != ui->widget_2->geometry())
     float totalRelativeWidth=0;
+
     int totalColumnWidth = 0;
 
         vplayer2->changeGeometry(currentWidget2Geometry);
@@ -2048,6 +2118,10 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
                             qDebug() << "i%5"<< counter%5 << counter;
                             camButtons1.append(camBtn1);
                             camButtons2.append(camBtn2);
+                            camButtons1[counter].camButton->setObjectName("camBtn1"+QString::number(counter+1,10));
+                            camButtons2[counter].camButton->setObjectName("camBtn2"+QString::number(counter+1,10));
+                            connect(camButtons1[counter].camButton,SIGNAL(clicked()),this,SLOT(pushCameraButton()));
+                            connect(camButtons2[counter].camButton,SIGNAL(clicked()),this,SLOT(pushCameraButton()));
 //                            camButtonsLayout1->addWidget(camButtons1[i].camButton,i/5,i%5);
 //                            ui->gridLayout->addWidget(camButtons1[i].camButton,i/5,i%5);
 //                            qDebug() << camOffsets.at(i);
@@ -2058,10 +2132,7 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
 
 
                 }
-                camButtonsLayout1->addWidget(ui->screen1SoundButton,0,0);
-                ui->screen1SoundButton->setVisible(true);
-                camButtonsLayout2->addWidget(ui->screen2SoundButton,0,0);
-                ui->screen2SoundButton->setVisible(true);
+
                /*
                 *from here we start to processing data from small table
                 */
@@ -2227,11 +2298,284 @@ int MainWindow::readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, u
 //                            }
     }
 //////qDebug() << "now we have offsets";
+    camButtonsLayout1->addWidget(ui->screen1SoundButton,0,0);
+    ui->screen1SoundButton->setVisible(true);
+    camButtonsLayout2->addWidget(ui->screen2SoundButton,0,0);
+    ui->screen2SoundButton->setVisible(true);
+
     return tmpErr;
 
 }
 
+void MainWindow::setCameraButtonsToDefault()
+{
+    bool firstNotZeroCamNumber=false;//flag that shows if the first
+//    if(timeCells[0].cellType==0)|
+    {
+        for(int i=0; i < dataMap[0].camTimeOffsets.size();i++)
+        {
+            if(dataMap[0].camTimeOffsets[i]<=0)
+            {
+                camButtons1[i].enabled = false;
+                camButtons1[i].active = false;
+                camButtons1[i].camButton->setStyleSheet("QPushButton{ background-color : lightgray; color : gray; }");
+            }
+            else
+            {
 
+                camButtons1[i].enabled = true;
+                if(!firstNotZeroCamNumber)
+                {
+                    firstNotZeroCamNumber=true;
+                    camButtons1[i].active = true;
+                     camButtons1[i].camButton->setStyleSheet("QPushButton{ background-color : white; color : green; border-style: outset;border-width: 3px;padding:4px;font: bold 11px;}");
+                }
+            }
+        }
+        firstNotZeroCamNumber=false;
+        for(int i=0; i < dataMap[0].camTimeOffsets.size();i++)
+        {
+            if(dataMap[0].camTimeOffsets[i]<=0)
+            {
+                camButtons2[i].enabled = false;
+                camButtons2[i].active = false;
+                camButtons2[i].camButton->setStyleSheet("QPushButton{ background-color : lightgray; color : gray; }");
+            }
+            else
+            {
+
+                camButtons2[i].enabled = true;
+                if((!firstNotZeroCamNumber)&(!camButtons1[i].active))
+                {
+                    firstNotZeroCamNumber=true;
+                    camButtons2[i].active = true;
+                     camButtons2[i].camButton->setStyleSheet("QPushButton{ background-color : white; color : green; border-style: outset;border-width: 3px;padding:4px;font: bold 11px;}");
+                }
+            }
+        }
+    }
+
+
+}
+
+int MainWindow::updateCameraButtons1(int number)
+{
+    qDebug() << "number"<<number;
+    bool updated = false;
+    if(number<0)
+    {
+
+    }
+    else
+    {
+        if(camButtons2[number-1].active!=true)
+        {
+            updated=true;
+            camButtons1[number-1].active=true;
+             camButtons1[number-1].camButton->setStyleSheet("QPushButton{ background-color : white; color : green; border-style: outset;border-width: 3px;padding:4px;font: bold 11px;}");
+        }
+        for(int i =0; i < camButtons1.size(); i++)
+        {
+            if(updated)
+            {
+                if(camButtons1[i].enabled)
+                {
+                    if(number-1!=i)
+                    {
+                       camButtons1[i].active = false;
+                       camButtons1[i].camButton->setStyleSheet("QPushButton{ background-color : white; color : black; }");
+                    }
+                }
+                else
+                {
+                    camButtons1[i].active = false;
+                    camButtons1[i].camButton->setEnabled(false);
+                    camButtons1[i].camButton->setStyleSheet("QPushButton{ background-color : lightgray; color : gray; }");
+                }
+            }
+        }
+
+    }
+    if(updated)
+        return 1;
+    else
+        return 0;
+}
+
+int MainWindow::updateCameraButtons2(int number)
+{
+        qDebug() << "number"<<number;
+        bool updated = false;
+    if(number<0)
+    {
+
+    }
+    else
+    {
+        if(camButtons1[number-1].active!=true)
+        {
+            updated = true;
+            camButtons2[number-1].active=true;
+             camButtons2[number-1].camButton->setStyleSheet("QPushButton{ background-color : white; color : green; border-style: outset;border-width: 3px;padding:4px;font: bold 11px;}");
+        }
+        for(int i =0; i < camButtons2.size(); i++)
+        {
+            if(updated)
+            {
+                if(camButtons2[i].enabled)
+                {
+                    if(number-1!=i)
+                    {
+                        camButtons2[i].active = false;
+                        camButtons2[i].camButton->setStyleSheet("QPushButton{ background-color : white; color : black; }");
+                    }
+                }
+                else
+                {
+                    camButtons2[i].active = false;
+                    camButtons2[i].camButton->setEnabled(false);
+                    camButtons2[i].camButton->setStyleSheet("QPushButton{ background-color : lightgray; color : gray; }");
+                }
+            }
+        }
+
+    }
+    if(updated)
+        return 1;
+    else
+        return 0;
+}
+void MainWindow::pushCameraButton()
+{
+    int camindex;
+    QString tmpindex,tmpparent;
+    QPushButton *tmpbtn = (QPushButton *)QObject::sender();
+    tmpbtn->clearFocus();
+    tmpindex = QObject::sender()->objectName().toLocal8Bit();
+    qDebug()<< tmpindex.at(7);
+    camindex = (int)tmpindex.at(7).toLatin1();
+    qDebug() << QObject::sender()->objectName().toLocal8Bit();
+    qDebug() << QObject::sender()->parent()->objectName();
+    qDebug() << "some button pushed";
+    if(QObject::sender()->parent()->objectName()=="widget_3")
+    {
+        if(updateCameraButtons1(camindex-0x30))//if 1 need change cameras, else not
+            setCamera1(camindex-0x30);
+    }
+    if(QObject::sender()->parent()->objectName()=="widget_4")
+    {
+        if(updateCameraButtons2(camindex-0x30))//if 1 need change cameras, else not
+            setCamera2(camindex-0x30);
+    }
+}
+
+void MainWindow::setCamera1(int index)
+{
+    int tmp1=0,activeIndex=0;
+    for(int i = 0; i < camButtons1.size(); i++)
+    {
+        if(camButtons1[i].active)
+            activeIndex = i;
+    }
+    if(readyToPlay)
+    {
+        pageIndex = timeCells[ui->tableWidget->currentColumn()].currentPage;
+        QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
+//        if(index==activeIndex)
+//        {
+//            if(index==ui->comboBox->count()-1)
+//                ui->comboBox->setCurrentIndex(index-1);
+//            else
+//                ui->comboBox->setCurrentIndex(index+1);
+//        }
+        if(isVideo1Opened|isVideo2Opened)
+        {
+                int tmptime = vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
+                while(tmp1<=activeIndex)
+                {
+                    Iter1.next();
+                    tmp1++;
+                }
+                if(vplayer2->getVideoState()==4)
+                    vplayer2->togglePause();
+                vplayer->openLocal(videoWorkingDir+"/"+Iter1.key());
+                showCameraNameTimer->start(200);
+                isVideo1Opened = true;
+                vplayer->_player->setTime(tmptime);
+                if(mythread->isRunning())
+                    mythread->exit();
+        }
+        lastIndex1 =index;
+        sound1IconState = vplayer->getAudioIconState();
+        sound2IconState = vplayer2->getAudioIconState();
+        if((sound1IconState!=0)&(sound2IconState!=0))
+        {
+            if(sound1IconState==sound2IconState)
+            {
+                if(sound1IconState!=1)
+                {
+                    setSoundIconState(1,2);
+                    setSoundIconState(2,1);
+                }
+            }
+        }
+        updateSoundMode();
+    }
+}
+
+void MainWindow::setCamera2(int index)
+{
+    int tmp2=0,activeIndex=0;
+    for(int i = 0; i < camButtons2.size(); i++)
+    {
+        if(camButtons2[i].active)
+            activeIndex = i;
+    }
+    if(readyToPlay)
+    {
+        pageIndex = timeCells[ui->tableWidget->currentColumn()].currentPage;
+        QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
+        if(isVideo1Opened|isVideo2Opened)
+        {
+
+            int tmptime = vplayer2->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);//!!
+                 while(tmp2<=activeIndex)
+                {
+                    Iter2.next();
+                    tmp2++;
+                }
+                if(vplayer->getVideoState()==4)
+                    vplayer->togglePause();
+            vplayer2->openLocal(videoWorkingDir+"/"+Iter2.key());
+            showCameraNameTimer->start(200);
+//            QString str="Камера ";
+//            vplayer2->showText(str.append(QString::number(ui->comboBox_2->currentIndex(),10)),1000,50,1000);
+
+            isVideo2Opened = true;
+            vplayer2->_player->setTime(tmptime);
+            if(mythread->isRunning())
+                mythread->exit();
+                if(mythread->isRunning())
+                    mythread->exit();
+                sound1IconState = vplayer->getAudioIconState();
+                sound2IconState = vplayer2->getAudioIconState();
+                if((sound1IconState!=0)&(sound2IconState!=0))
+                {
+                    if(sound1IconState==sound2IconState)
+                    {
+                        if(sound1IconState!=1)
+                        {
+                            setSoundIconState(2,2);
+                            setSoundIconState(1,1);
+                        }
+                    }
+                }
+//                setSoundIcons();
+                updateSoundMode();
+        }
+        lastIndex2 = index;
+    }
+}
 int MainWindow::readTimeEdges(time_t *beginTime, time_t *endTime/*, unsigned char *beginTimeFract, unsigned char *endTimeFract*/)
 {
     long tmpErr = log->selectSegment(bigTableID);
@@ -3038,7 +3382,8 @@ void MainWindow::on_pushButton_clicked()
         createCellVector();
 //        ////qDebug() <<"VERY BEGIN TIME" << QDateTime::fromTime_t(timeCells[0].beginTime).toUTC();
         initColoredScale();
-
+        setCameraButtonsToDefault();
+//        updateCameraButtons(0);
 //        ////qDebug() << "WIDTH OF TABLE" << ui->tableWidget->width();
 //        ////qDebug() << "WIDTH OF SCALE" << ui->ScaleWidget->width();
 //        ////qDebug() << "column widthes";
@@ -4220,6 +4565,7 @@ void MainWindow::terminateAll()
         ui->line_4->setVisible(false);
         ui->ScaleWidget->setVisible(false);
         ui->horizontalSlider->setEnabled(false);
+
     //    ui->ScaleWidget->close();
         ui->playButton->click();
         vplayer->stop();
@@ -4297,6 +4643,8 @@ void MainWindow::terminateAll()
         camOffsets.clear();
         logEndTimes.clear();
         pageIndex = 0;
+        ui->horizontalLayout_2->addWidget(ui->screen1SoundButton);
+        ui->horizontalLayout_3->addWidget(ui->screen2SoundButton);
         for(int i =0; i < ui->gridLayout_2->count(); i++)
         {
                 QLayoutItem* item;
@@ -4307,9 +4655,35 @@ void MainWindow::terminateAll()
                 }
 
         }
+        for(int i =1; i < camButtonsLayout1->count(); i++)
+        {
+                QLayoutItem* item;
+                while((item = camButtonsLayout1->takeAt(0))!=NULL)
+                {
+                    delete item->widget();
+                    delete item;
+                }
+
+        }
+        for(int i =1; i < camButtonsLayout2->count(); i++)
+        {
+            qDebug() << "cambuttons count" << camButtonsLayout2->count();
+                QLayoutItem* item;
+                while((item = camButtonsLayout2->takeAt(0))!=NULL)
+                {
+                    delete item->widget();
+                    delete item;
+                }
+
+        }
+
         thermoVals.clear();
         parameterBar.clear();
         checkBoxes.clear();
+        ui->screen1SoundButton->setVisible(false);
+        ui->screen2SoundButton->setVisible(false);
+        camButtons1.clear();
+        camButtons2.clear();
     //    ////qDebug() << "orr now!";
 }
 
@@ -4432,17 +4806,10 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
 {
 
     int tmp1=0,tmp2=0;
-//    if(timeCells[ui->tableWidget->currentColumn()].currentPage!=pageIndex)
     if(readyToPlay)
     {
         pageIndex = timeCells[ui->tableWidget->currentColumn()].currentPage;
         QMapIterator <QString, bool> Iter1(dataMap[pageIndex].videoVector);
-    //    vplayer->_player->pause();
-    //    vplayer2->_player->pause();
-    //    while(vplayer->getVideoState()!=4){}
-    //    while(vplayer2->getVideoState()!=4){}
-    //    QMapIterator <QString, bool> Iter2(dataMap[pageIndex].videoVector);
-//        ////qDebug() << "index of combobox1 changed" << index;
         if(index==ui->comboBox_2->currentIndex())
         {
             if(index==ui->comboBox->count()-1)
@@ -4450,64 +4817,26 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
             else
                 ui->comboBox->setCurrentIndex(index+1);
         }
-        //////qDebug() << "is video1 opened? -" << isVideo1Opened;
         if(isVideo1Opened|isVideo2Opened)
         {
                 int tmptime = vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
-                //////qDebug() << "player1 current time" << vplayer->_player->time();
-                //////qDebug() << "player2 current time" << vplayer2->_player->time();
-    //            //////qDebug() << "player2 tmptime" <<tmptime;
-    //            //////qDebug() << "player1 tmptime" << vplayer->getCurrentTime()+camOffsets.at(lastIndex1-1)-camOffsets.at(index-1);
                 while(tmp1<=ui->comboBox->currentIndex())
                 {
                     Iter1.next();
                     tmp1++;
                 }
-    //            while(tmp2<ui->comboBox_2->currentIndex()=1)
-    //                Iter2++;
-    //                openVideoFile(Iter1.key(),Iter2.key());
                 if(vplayer2->getVideoState()==4)
                     vplayer2->togglePause();
                 vplayer->openLocal(videoWorkingDir+"/"+Iter1.key());
                 showCameraNameTimer->start(200);
-//                QString str="Камера ";
-//                vplayer->showText(str.append(QString::number(ui->comboBox->currentIndex(),10)),1000,50,1000);
-
-    //               // openLogFile(dataMap[pageIndex].logName);
-    //                if(mythread->isRunning())
-    //                    mythread->exit();
-//                ////qDebug() << ui->comboBox->currentIndex();
-//                ////qDebug() << Iter1.key();
                 isVideo1Opened = true;
-    //            delayTimer->start(1);
                 vplayer->_player->setTime(tmptime);
-    //            vplayer->togglePause();
-    //            vplayer2->togglePause();
-    //            if(mythread->isFinished())
-    //                mythread->start();
                 if(mythread->isRunning())
                     mythread->exit();
-                //////qDebug() << "player1 current time2" << vplayer->_player->time();
-                //////qDebug() << "player2 current time2" << vplayer2->_player->time();
-    //        }
         }
         lastIndex1 =index;
-    //    if(vplayer->getVideoState()!=4)
-    //        vplayer->_player->pause();
-    //    if(vplayer2->getVideoState()!=4)
-    //        vplayer2->_player->pause();
-//        ////qDebug() << "player has state" << vplayer->getVideoState();
-//        ////qDebug() << "player2 has state" << vplayer2->getVideoState();
-    //    if(vplayer->getVideoState()!=vplayer2->getVideoState())
-    //        vplayer->togglePause();
-
-    //    else
-    //    {
-    //        ui->comboBox->setCurrentIndex(5-index);
-    //    }
         sound1IconState = vplayer->getAudioIconState();
         sound2IconState = vplayer2->getAudioIconState();
-//        setSoundIcons();
         if((sound1IconState!=0)&(sound2IconState!=0))
         {
             if(sound1IconState==sound2IconState)
@@ -4542,9 +4871,19 @@ void MainWindow::on_frameBackwardButton_clicked()
 void MainWindow::on_nextFrameButton_clicked()
 {
 //    vplayer->s
+    int activeIndex1=0,activeIndex2=0;
     qDebug() << "show camera names!!!";
     QString str="    Камера ";
-    str.append(QString::number(ui->comboBox->currentIndex(),10));
+    for(int i = 0; i < camButtons1.size();i++)
+    {
+        if(camButtons1[i].active)
+            activeIndex1=i;
+        if(camButtons2[i].active)
+            activeIndex2=i;
+
+    }
+//    str.append(QString::number(ui->comboBox->currentIndex(),10));
+    str.append(QString::number(activeIndex1+1,10));
     QString soundstr = "\nЗвук ";
     if(sound1IconState==0)
         soundstr.append("отсутствует");
@@ -4555,7 +4894,7 @@ void MainWindow::on_nextFrameButton_clicked()
     str.append(soundstr);
     vplayer->showText(str,2000,50,2000);
     str="    Камера ";
-    str.append(QString::number(ui->comboBox_2->currentIndex(),10));
+    str.append(QString::number(activeIndex2+1,10));
     soundstr = "\nЗвук ";
     if(sound2IconState==0)
         soundstr.append("отсутствует");
@@ -4971,6 +5310,12 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 //    {
 
 //        //qDebug() << "blank"<< target->objectName();
+//    }qDebug() << "space released";
+//    if(event->type()==QEvent::KeyPress)
+//    {
+//        QKeyEvent *kevent = (QKeyEvent*)event;
+//        if(kevent->key()==Qt::Key_Space)
+//            qDebug() << "space pressed";
 //    }
     if(event->type() == QEvent::MouseButtonRelease)
     {
@@ -4984,6 +5329,10 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 //            if(canMoveSeeker)
 //            {
 //                ui->playButton->click();
+            ui->line_5->clearFocus();
+            ui->tableWidget->viewport()->clearFocus();
+            ui->ScaleWidget->clearFocus();
+            ui->tableWidget->clearFocus();
                 canMoveSeeker = false;
                 seekerIsBusy = false;
 //                //qDebug() << "event button released";
@@ -5052,6 +5401,8 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
         if((target==  ui->tableWidget->viewport())||(parent_name=="ScaleWidget")||(parent_name == "qt_scrollarea_viewport")||(target== ui->line_5))
         {
             seekerIsBusy = true;
+            ui->tableWidget->viewport()->clearFocus();
+            ui->tableWidget->clearFocus();
             int tmpval = ui->tableWidget->viewport()->mapFromGlobal(QCursor::pos()).x();//-ui->tableWidget->columnViewportPosition(ui->tableWidget->currentColumn());
 //            qDebug() << "global coords1" << tmpval;
 //            qDebug() << mouseEvent->x();
@@ -5732,4 +6083,35 @@ void MainWindow::updateSoundMode()
 //    else
 //        vplayer2->setAudioState(Vlc::Stopped);
     setSoundIcons();
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    keyboardKey = event->key();
+    if(event->key()==Qt::Key_Space)
+        qDebug() << "space pressed";
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->key() != keyboardKey)
+      return;
+    keyboardKey = 0;
+    switch(event->key())
+    {
+    case Qt::Key_Space:
+        qDebug() << "space released";
+        ui->playButton->click();
+        break;
+    case Qt::Key_Escape:
+       // Обработка нажатия Esc
+       break;
+    case Qt::Key_Enter:
+       // Обработка нажатия Enter
+       break;
+    default:
+        break;
+     // Обработчики других клавиш
+    }
+   // update();
 }

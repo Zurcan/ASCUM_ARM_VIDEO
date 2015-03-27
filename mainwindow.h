@@ -422,6 +422,7 @@ private:
     QVector <tableCell> timeCells;
     QVector <dataPage> dataMap;
     int timeCellIndex;
+    int keyboardKey;
 
     int openLogFilesFolder(QStringList *);//also we have to set some kind of sorting here, but the best choice is to set that sorting in the function
     int openVideoFilesFolder(QStringList *);//also we have to set some kind of sorting here, but the best choice is to set that sorting in the function
@@ -476,9 +477,18 @@ private:
     void moveToAnotherTimeSegment(int);
     void getCellAndTimeToMoveTo(int, int );
     void getDelayMsToSet(int, int );
+    void setCameraButtonsToDefault();
+    void makeUpSlider();
+    virtual void keyPressEvent(QKeyEvent* event);
+    virtual void keyReleaseEvent(QKeyEvent* event);
 private slots:
 //    int getNextFileName();
 //    int getNextFileSameName();
+    int updateCameraButtons1(int number);
+    int updateCameraButtons2(int number);
+    void setCamera1(int index);
+    void setCamera2(int index);
+    void pushCameraButton();
     void clearParTable();
     void resizeEvent(QResizeEvent *);
     void waitEndStateTimerTick();
