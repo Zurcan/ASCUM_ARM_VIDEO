@@ -44,6 +44,7 @@ public:
     int pause();
     int moveToTime(int);
     int getCurrentTime();
+    void setPlayerTime(int);
     int changeGeometry(QRect rect);
     int getVideoLength();
     float getPosition();
@@ -57,6 +58,7 @@ public:
     int getVideoState(); //returns video player vlc state
     void setAudioMuted(bool);
     void setAudioVolume(int);
+    bool isSoundEnabled();
     QSize getVideoSize();
     QRect getGeometry();
     QString getCurrentMediaLocation();

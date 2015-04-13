@@ -172,13 +172,13 @@ virtual void drawLabel(QPainter *painter, double value) const;
 
 };
 
-class TableWidget:public QTableWidget
-{
-    Q_OBJECT
-public:
-    TableWidget();
+//class TableWidget:public QTableWidget
+//{
+//    Q_OBJECT
+//public:
+//    TableWidget();
 
-};
+//};
 
 class MyThread:public QThread
 {
@@ -294,6 +294,8 @@ private:
     int delayMsToSet = 0;
     int sound1IconState = 0;//current state of sound on screen1 it may be in 3 states 0 - no soundtrack, 1 = soundtrack muted, 2 = soundtrack playing
     int sound2IconState = 0;//same as above
+    int currentCam1Index = 0;
+    int currentCam2Index = 0;
 
     bool firstPass = true;
     bool videoOnly = true;
@@ -314,6 +316,8 @@ private:
     bool accepted = false;
     bool canMoveSeeker = false;
     bool seekerIsBusy = false;
+    bool summaryIsHidden = false;
+    bool currentStatsAreHidden = false;
 
     char tmpFHPtr[40];
     int pageIndex;
@@ -330,6 +334,8 @@ private:
     QTimer *getTimeTimer;
     QTimer *threadTimer;
     QTimer *showCameraNameTimer;
+    QTimer *hideSummarySeamlessTimer;
+    QTimer *syncroTimer;
 
     QRect currentWidget1Geometry;
     QRect currentWidget2Geometry;
@@ -365,6 +371,8 @@ private:
     unsigned char beginTimeFract,endTimeFract;
     unsigned char camQty;
     int videoTimeGlobalIterator;
+    int hideSummaryCounter;
+    QIcon *tmpIcon;
 
     QVector <time_t> timeSegment;                 // this qvector is used to navigate in all times using time; it is so because it's easy to navigate through it using simple iterator (each 2 members are 1 segment)
     QVector <int> camOffsets;                     // on the other hand it is very usable to navigate exectly through members, because time navigation is not safe due to time overlay is possible
@@ -455,6 +463,7 @@ private:
     void setButtonPanelEnabled(bool tf);
     int createDataMap();
     int createFullListOfVideos(int offsetsQty);
+    int calculateMaxOffset();
 
     //addition to struct dataParams
     int getDataType(int index);
@@ -479,6 +488,7 @@ private:
     void getDelayMsToSet(int, int );
     void setCameraButtonsToDefault();
     void makeUpSlider();
+    void updateCamWidgetsState();
     virtual void keyPressEvent(QKeyEvent* event);
     virtual void keyReleaseEvent(QKeyEvent* event);
 private slots:
@@ -501,6 +511,9 @@ private slots:
     void setSoundIconState(int,int);
     void updateSoundMode();
     void setSoundIcons();
+    void hideSummaryTimerTick();
+    void syncroTimerTimeout();
+
 //    void waitVideo2EndMode();
     void simpleDelayTimerTick();
     void setPlayer1ModePlaying();
@@ -582,6 +595,8 @@ private slots:
     void on_screen1SoundButton_clicked();
 
     void on_screen2SoundButton_clicked();
+
+    void on_hideSummary_clicked();
 
 protected:
     void paintEvent(QPaintEvent *);

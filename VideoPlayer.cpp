@@ -23,6 +23,10 @@ void VideoPlayer::defineVideo(QObject *parent, QWidget *videoparent1/*, QWidget 
     QStringList args;
     args.append("--no-video-title-show");
     args.append("--sub-filter=marq");
+    args.append("--file-caching=120000");
+    args.append("--clock-synchro=0");
+    args.append("--clock-jitter=0");
+    args.append("--sout-smem-time-sync");
     _instance = new VlcInstance(args,parent);
     int x1,y1,x2,y2;
 //    _instance_2 = new VlcInstance(VlcCommon::args(),parent);
@@ -357,8 +361,21 @@ void VideoPlayer::setAudioMuted(bool tf)
     }
 }
 
+void VideoPlayer::setPlayerTime(int ptime)
+{
+    _player->setTime(ptime);
+
+}
+
 void VideoPlayer::setAudioVolume(int vol)
 {
     if((_audioplayer->state()!=Vlc::Stopped)|(_player->state()!=Vlc::Stopped))
         _audioplayer->audio()->setVolume(vol);
+}
+
+bool VideoPlayer::isSoundEnabled()
+{
+    if((_audioplayer->state()==Vlc::Stopped)|(_audioplayer->state()==Vlc::Idle)|(_audioplayer->state()==Vlc::Error)|(_audioplayer->state()==Vlc::Ended))
+        return false;
+    else return true;
 }

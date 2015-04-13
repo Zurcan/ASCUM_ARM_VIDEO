@@ -76,3 +76,6 @@ LIBS     += -LC:\Qt\vlc-qt_release\lib -lvlc-qt -lvlc-qt-widgets
 INCLUDEPATH += C:\Qt\vlc-qt_release\include
 INCLUDEPATH += C:\Qt\vlc-qt_release\bin
 INCLUDEPATH += C:\Program Files\VideoLAN\VLC
+
+RESOURCES += \
+    res.qrc

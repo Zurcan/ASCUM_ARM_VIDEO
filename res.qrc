@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/new/p">
+        <file alias="hidePanel">res/hideLeftPannel_.png</file>
+        <file alias="showPanel">res/showLeftPannel.png</file>
+    </qresource>
+</RCC>
