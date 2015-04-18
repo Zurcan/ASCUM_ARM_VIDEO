@@ -33,11 +33,9 @@ class VideoPlayer//: public QMainWindow
 //Q_OBJECT
 public:
    // explicit VideoPlayer(QWidget *parent = 0);
-    VlcMediaPlayer *_player;
-//    VlcMediaPlayer *_player_2;
-     VlcMedia *_media;
-    VlcVideo *someVideo;
+
 //    explicit VideoPlayer(QWidget *parent = 0);
+    bool ispaused;
     void defineVideo(QObject *, QWidget *);
     int openLocal(QString);
     int stop();
@@ -67,14 +65,16 @@ public:
 
 private:
     VlcWidgetVideo *video;
-//    VlcWidgetVideo *video_2;
+    VlcMediaPlayer *_player;
+    VlcMedia *_media;
+    VlcVideo *someVideo;
     VlcInstance *_instance;
     VlcInstance *_audioinstance;
     VlcMedia *_audio;
     VlcMediaPlayer *_audioplayer;
 
 //    VlcMedia *_media_2;
-    bool ispaused;
+
     int volume = 100;
 
 //    void openUrl();

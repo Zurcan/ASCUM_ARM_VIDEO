@@ -318,6 +318,7 @@ private:
     bool seekerIsBusy = false;
     bool summaryIsHidden = false;
     bool currentStatsAreHidden = false;
+    bool isPaused = false;
 
     char tmpFHPtr[40];
     int pageIndex;
@@ -427,8 +428,18 @@ private:
         int donor;              //0=not donor not acceptor, 1 = donor, 2 = acceptor;
 
     };
+
+    struct savedVStats
+    {
+        int video1Status;
+        int video2Status;
+        bool mythreadStatus; //true means running, false means exit
+        bool dataUpdated;
+    };
+
     QVector <tableCell> timeCells;
     QVector <dataPage> dataMap;
+    savedVStats savedVideoStats;
     int timeCellIndex;
     int keyboardKey;
 
@@ -478,12 +489,14 @@ private:
     void setHSliderPosOnButtonPress(QMouseEvent *me);
     void selectVideoFolder();
     void selectLogFolder();
+    void saveVideoStats();
+    void loadVideoStats();
     int createLogConfigFile(QString logpath);
     int createVideoConfigFile(QString videopath);
     int openLogConfigFile(QString *);
     int openVideoConfigFile(QString *);
     int updateConfigFile(QString);
-    void moveToAnotherTimeSegment(int);
+    void moveToAnotherTimeSegment(int, int state1, int state2);
     void getCellAndTimeToMoveTo(int, int );
     void getDelayMsToSet(int, int );
     void setCameraButtonsToDefault();
@@ -496,8 +509,8 @@ private slots:
 //    int getNextFileSameName();
     int updateCameraButtons1(int number);
     int updateCameraButtons2(int number);
-    void setCamera1(int index);
-    void setCamera2(int index);
+    void setCamera1(int index,int state);
+    void setCamera2(int index, int state);
     void pushCameraButton();
     void clearParTable();
     void resizeEvent(QResizeEvent *);
@@ -513,6 +526,7 @@ private slots:
     void setSoundIcons();
     void hideSummaryTimerTick();
     void syncroTimerTimeout();
+    void prepareVideoMarque();
 
 //    void waitVideo2EndMode();
     void simpleDelayTimerTick();
@@ -540,15 +554,15 @@ private slots:
     void on_stopButton_clicked();
     void on_timeEdit_editingFinished();
     void stateTimerTick();
-    void on_timeEdit_userTimeChanged(const QTime &time);
+//    void on_timeEdit_userTimeChanged(const QTime &time);
     int readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, unsigned char *beginTimeFract, unsigned char *endTimeFract,int globalIterator);
-    void on_nextTimeSegment_clicked();
+//    void on_nextTimeSegment_clicked();
     void getTimeTimerTick();
     void createCellVector();            // creating table widget cell begin and end times X=begin Y=end
 
-#ifdef GLOBALMODE
-    void setVideoTime();
-#endif
+
+//    void setVideoTime();
+
 
     void on_action_triggered();
 
@@ -583,20 +597,15 @@ private slots:
 
     void on_tableWidget_cellChanged(int row, int column);
 
-//    void on_tableWidget_clicked(const QModelIndex &index);
-
     void on_horizontalSlider_actionTriggered(int action);
-
-//    void on_tableWidget_cellClicked(int row, int column);
-//    void on_tableWidget_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
-
-//    void on_tableWidget_cellClicked(int row, int column);
 
     void on_screen1SoundButton_clicked();
 
     void on_screen2SoundButton_clicked();
 
     void on_hideSummary_clicked();
+
+//    void on_nextTimeSegment_clicked();
 
 protected:
     void paintEvent(QPaintEvent *);

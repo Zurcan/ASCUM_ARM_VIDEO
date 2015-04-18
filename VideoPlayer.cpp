@@ -2,20 +2,7 @@
 #include <QString>
 #include <QDebug>
 #include <QFile>
-//#include <vlc-qt/Common.h>
-//#include <vlc-qt/Instance.h>
-//#include <vlc-qt/Media.h>
-//#include <vlc-qt/MediaPlayer.h>
-//#include <vlc-qt/WidgetVideo.h>
-//#include <vlc-qt/VideoFrame.h>
-//#include <vlc-qt/WidgetSeek.h>
-//VideoPlayer::VideoPlayer(QWidget *parent)
-//    : QMainWindow(parent),
-//      ui(new Ui::DemoPlayer),
-//      _media(0)
-//{
 
-//}
 
 void VideoPlayer::defineVideo(QObject *parent, QWidget *videoparent1/*, QWidget *videoparent2*/)
 {
@@ -277,7 +264,6 @@ int VideoPlayer::pause()
 int VideoPlayer::getVideoLength()
 {
 
-
     return _player->length();
 }
 
@@ -335,6 +321,10 @@ void VideoPlayer::togglePause()
 //    qDebug() << _audioplayer->currentMedia()->currentLocation();
     if((_audioplayer->state()!=Vlc::Stopped)|(_player->state()!=Vlc::Stopped))
         _audioplayer->togglePause();
+    if(_player->state()==Vlc::Playing)
+        ispaused = false;
+    else if(_player->state()==Vlc::Paused)
+        ispaused = true;
 //    setAudioState(_player->state());
 }
 void VideoPlayer::play()
@@ -347,6 +337,7 @@ void VideoPlayer::play()
 //    QString tmpstr = _audioplayer->currentMedia()->currentLocation();
     if(_audioplayer->state()!=Vlc::Stopped)
         _audioplayer->play();
+    ispaused = false;
 //    setAudioState(Vlc::Playing);
 }
 
