@@ -8,18 +8,7 @@
 #include <QtMultimedia/QMediaObject>
 #include <QtGui>
 #include <QTableWidget>
-//#include <QtMultimedia/QAudioDeviceInfo>
-//#include <QtMultimedia/QVideoDeviceSelectorControl>
-//#include <QtMultimedia/QAudioBuffer>
-//#include <QMultimedia>
-//#include <QtMultimediaWidgets/QVideoWidget>
-//#include <QtMultimedia>
-//#include <QtMultimedia/QVideoFrame>
-//#include <QtMultimedia/QMediaPlayer>
 #include <time.h>
-//#include <QMovie>
-//#include <qvideosurfaceformat.h>
-//#include <QMediaPlaylist>
 #include <QFileDialog>
 #include <QStyledItemDelegate>
 #include <VideoPlayer.h>
@@ -34,8 +23,6 @@
 #include <QLine>
 #include <qwt_plot.h>
 #include <qwt_plot_marker.h>
-//#include <qwt_scale_draw.h>
-//#include <qwt_scale_engine.h>
 #include <QCheckBox>
 #include <QEventLoop>
 #include <math.h>
@@ -47,18 +34,8 @@
 #include <qwt_scale_engine.h>
 #include <qwt_scale_draw.h>
 #include <../../flyingFrame/FlyingFrame.h>
-//#include <FlyingFrame.h>
-//#include <qwt_math.h>
-//#include <qwt_painter.h>
-//#include <qpen.h>
-//#include <qpainter.h>
-//#include <qmatrix.h>
-//#include <qwt_global.h>
-//#include <qwt_text_label.h>
-//#include <qwt_dyngrid_layout.h>
 #include <qwt_slider.h>
 #include <QLine>
-//    T getValByIndex();
 
 
 class ThreadWorker:public QObject
@@ -75,7 +52,6 @@ public:
 public slots:
     void synchroTickFromThread(int);
     void timerTick();
-//    void ticksFromThread(int);
 signals:
     void ticksToThread(int);
     void finished();
@@ -83,6 +59,7 @@ signals:
 
 
 };
+
 class BackgroundDelegate : public QStyledItemDelegate
 {
 public:
@@ -91,119 +68,46 @@ public:
     {
     }
     void paint(QPainter *painter, const QStyleOptionViewItem &option,
-               const QModelIndex &index) const
-    {
-        // Fill the background before calling the base class paint
-        // otherwise selected cells would have a white background
-        QVariant background = index.data(Qt::BackgroundRole);
-        if (background.canConvert<QBrush>())
-            painter->fillRect(option.rect, background.value<QBrush>());
+               const QModelIndex &index) const;
 
-        QStyledItemDelegate::paint(painter, option, index);
-
-        // To draw a border on selected cells
-        if(option.state & QStyle::State_Selected)
-        {
-            painter->save();
-            QPen pen(Qt::black, 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin);
-            int w = pen.width()/2;
-            painter->setPen(pen);
-            painter->drawRect(option.rect.adjusted(w,w,-w,-w));
-            //painter->drawRect(0,100,200,300);
-            painter->restore();
-        }
-    }
 };
-//class VideoSlider: public QwtSlider
-//{
-//    Q_OBJECT
-//public:
-//     VideoSlider( QWidget *parent/*,
-////                        Qt::Orientation = Qt::Horizontal,
-//             //                        ScalePos = NoScale, BackgroundStyles = Trough */);
-//     ~VideoSlider();
-////protected:
-////   virtual void drawHandle( QPainter *painter,const QRect &sliderRect, int pos ) const;
-////private:
-////    class PrivateData;
-////    PrivateData *d_data;
-//};
+
 
 class MapTimeScaleDraw: public QwtScaleDraw
 {
-public:
-MapTimeScaleDraw(QString fmt) : format(fmt) { }
-
-
-virtual QwtText label(double v) const
-{
-    QwtText retVal;
-    QDateTime upTime = QDateTime::fromTime_t(timeArr[(int)v]).toUTC();
-
-   if(v==0)
-   {
-       retVal = upTime.toString("hh:mm:ss");
-//       retVal = upTime
-       return retVal;
-   }
-
-   else return upTime.toString(format);
-}
-void setTimeArr(time_t *t,int l)
-{
-    timeArr = t;
-    timeArrLength = l;
-}
-void setTimeArrayDelta(int val)
-{
-    timeArrDelta = val;
-    qDebug() << "timeArrDelta"<<val;
-}
-
-private:
-const QString format;
-time_t *timeArr;
-int timeArrLength;
-int timeArrDelta;
-
-//void setLabelAlignment( Qt::Alignment );
-protected:
-virtual void drawLabel(QPainter *painter, double value) const;
+    public:
+    MapTimeScaleDraw(QString fmt) : format(fmt) { }
+    virtual QwtText label(double v) const;
+    void setTimeArr(time_t *t,int l);
+    void setTimeArrayDelta(int val);
+    private:
+    const QString format;
+    time_t *timeArr;
+    int timeArrLength;
+    int timeArrDelta;
+    protected:
+    virtual void drawLabel(QPainter *painter, double value) const;
 
 };
 
-//class TableWidget:public QTableWidget
+//class MyThread:public QThread
 //{
 //    Q_OBJECT
 //public:
-//    TableWidget();
+//    explicit MyThread(QObject *parent = 0);
+//    QEventLoop *loop;
+//    int timerTicks;
+//    ThreadWorker *worker;
+//signals:
+//    void tickOut(int);
+//    void tickIn(int);
+//public slots:
+//    void getTicksFromWorker(int);
+//    void synchroTick(int ms);
+//private:
+//    void run();
 
 //};
-
-class MyThread:public QThread
-{
-    Q_OBJECT
-public:
-    explicit MyThread(QObject *parent = 0);
-//    MyThread();
-    QEventLoop *loop;
-    int timerTicks;
-    ThreadWorker *worker;
-signals:
-    void tickOut(int);
-    void tickIn(int);
-public slots:
-//    void setTimerZero();
-//    void timerTick();
-//    void stopTimer();
-//    void setTimerInterval(int ms);
-//    void restartTimer();
-    void getTicksFromWorker(int);
-    void synchroTick(int ms);
-private:
-    void run();
-
-};
 
 namespace Ui {
 class MainWindow;
@@ -279,7 +183,6 @@ private:
     int delayMs;
     int lastDelay;
     int flowingOffset;
-    int stateTimerTickCounter=0;
     int tickCounter;
     int videoDelayms;
     int logVideoDelta;
@@ -319,24 +222,25 @@ private:
     bool summaryIsHidden = false;
     bool currentStatsAreHidden = false;
     bool isPaused = false;
+    bool pauseDelayFinished = false;
 
     char tmpFHPtr[40];
     int pageIndex;
     QThread *mythread;
-    MyThread *someThread;
+//    MyThread *someThread;
     ThreadWorker *worker;
     QMutex mutex;
 
     QTimer *timer;
-    QTimer *delayTimer;
-    QTimer *stateTimer;
+//    QTimer *delayTimer;
     QTimer *waitEndStateTimer;
-    QTimer *simpleDelayTimer;
+//    QTimer *simpleDelayTimer;
     QTimer *getTimeTimer;
     QTimer *threadTimer;
     QTimer *showCameraNameTimer;
     QTimer *hideSummarySeamlessTimer;
     QTimer *syncroTimer;
+    QTimer *pauseDelayTimer;
 
     QRect currentWidget1Geometry;
     QRect currentWidget2Geometry;
@@ -352,7 +256,6 @@ private:
     QVector <QwtThermo*> parameterBar;
     QVector <QCheckBox*> checkBoxes;
     QVector <QLineEdit*> thermoVals;
-    int initSlider(int);
     int initColoredScale();
     int initBigThermos(int qty);
     int initSmallThermos(int qty, QVector <QString>, QVector<long> maxs, QVector<int> dataSequence);
@@ -361,7 +264,6 @@ private:
     logProcessor *log;
     TMIinterpretator *interpreter;
     MapTimeScaleDraw *mapTimeScale;
-//    VideoSlider *vslider;
     msgSys *msys;
     bool inverseTime=false;
     QString playingFile1,playingFile2;
@@ -381,8 +283,7 @@ private:
     QVector <int> videoTimes;
     QVector <int> logEndTimes;
     QVector <int> offsetsCounter;
-//    QVector <QPushButton> camButtons1;
-//    QVector <QPushButton> camButtons2;
+
     struct cameraButton
     {
         QPushButton *camButton;
@@ -393,14 +294,6 @@ private:
     QVector <cameraButton> camButtons2;
     QGridLayout *camButtonsLayout1;
     QGridLayout *camButtonsLayout2;
-//    QVector <float> columnWidthes;                //relative to total time length column width
-//    QVector <int> pageVector;                     //consists of ints each of it means what pageIndex is in current cell
-//    QVector <int> pageFlagVector;                 //consists of ints each of it means what behaviour should be at current cell processing 0 - play video 1 - show parameters 2 - ok do nothing 3 - error do nothing
-//    QVector <int> pageEndTimes;                 //contains start times of each cell
-//    QVector <QWidget> coloredBars;
-
-//    FlyingFrame *myFrame;
-//    MyThread *thrd;
 
 
     struct dataPage
@@ -453,23 +346,18 @@ private:
     int createFakeTimeScale(int mode, int column);                                              // here is matching of timeSegment on qslider taking place
     bool checkFileHeaderCRC(QString filename);
     bool createTimeSegment(QStringList *listOfLogs);                        //here is creating of timeSegment vector
-    bool checkfunc(time_t *, time_t *);
     int disassembleLogRecord();
     QTime getVideoTime();                                                   //gets current time of the video with ms to compare with logTime
     time_t getNextLogTime(int currentRecord);                               //gets next record's time
     int getRecordNumClosestToTime(time_t currentTime, int timeFract, int lastRecord);//returns number of record closest to given time also we can recieve record
     int checkIsThereTimeFract(time_t);                                      //search for time fracts returns quantity of timeFracts
-    int findTimeSegment(int);
     int initThermoMaxs(QVector <long> *);
     int initThermoNames(QVector <QString> *, QVector<int> *dataSequence);
     int setPlay();
     int setPause();
     int checkVideoFilesExistance(QString path);
     int checkLogFilesExistance(QString path);
-    int videoFileSelector(int camIndex, int lastOpenedFileIndex);
     int openVideoFile(QString filename1, QString filename2);
-    int changeVideo1(QString filename);
-    int changeVideo2(QString filename);
     void moveToNextTimeFrame();
     void setButtonPanelEnabled(bool tf);
     int createDataMap();
@@ -477,25 +365,15 @@ private:
     int calculateMaxOffset();
 
     //addition to struct dataParams
-    int getDataType(int index);
-    int getBeforeIndex(int videoIndex);
-    int getTypeIndex(int index);
     int makeStructFromRecord(char *record, dataParams *);
-    bool synchronizePlayersStates();
 
     //config funcs
     QString logWorkingDir = "",videoWorkingDir = "";
-    void setFolderWFiles(QString);
     void setHSliderPosOnButtonPress(QMouseEvent *me);
     void selectVideoFolder();
     void selectLogFolder();
-    void saveVideoStats();
-    void loadVideoStats();
     int createLogConfigFile(QString logpath);
     int createVideoConfigFile(QString videopath);
-    int openLogConfigFile(QString *);
-    int openVideoConfigFile(QString *);
-    int updateConfigFile(QString);
     void moveToAnotherTimeSegment(int, int state1, int state2);
     void getCellAndTimeToMoveTo(int, int );
     void getDelayMsToSet(int, int );
@@ -505,8 +383,6 @@ private:
     virtual void keyPressEvent(QKeyEvent* event);
     virtual void keyReleaseEvent(QKeyEvent* event);
 private slots:
-//    int getNextFileName();
-//    int getNextFileSameName();
     int updateCameraButtons1(int number);
     int updateCameraButtons2(int number);
     void setCamera1(int index,int state);
@@ -514,8 +390,6 @@ private slots:
     void pushCameraButton();
     void clearParTable();
     void resizeEvent(QResizeEvent *);
-    void waitEndStateTimerTick();
-    void getThreadedTicks(int);
     void correctFramePosition();
     void correctCellSeekerPosition(int newPos);
     void terminateAll();
@@ -526,71 +400,38 @@ private slots:
     void setSoundIcons();
     void hideSummaryTimerTick();
     void syncroTimerTimeout();
+    void pauseDelayTimerTimeout();
     void prepareVideoMarque();
 
-//    void waitVideo2EndMode();
-    void simpleDelayTimerTick();
-    void setPlayer1ModePlaying();
-    void setPlayer2ModePlaying();
-    void setPlayer1ModePaused();
-    void setPlayer2ModePaused();
-    void setPlayer1State();
-    void setPlayer2State();
     void setSliderPosition();
-    bool checkVideosSynchronized();
-    void setPlayer1ModeOpening();
-    void setPlayer2ModeOpening();
-    void pausePlayer1();
-    void playBothPlayers();
+
     void updateTime();
+
     void on_pushButton_clicked();
-    void video1Ended();
-    void video2Ended();
+
     void on_action_2_triggered();
-    void delayTimerTick();
+
     void on_playButton_clicked();
-    void startDelayTimer();
-    void stopDelayTimer();
+
     void on_stopButton_clicked();
+
     void on_timeEdit_editingFinished();
-    void stateTimerTick();
-//    void on_timeEdit_userTimeChanged(const QTime &time);
+
     int readCamOffsetsAndTimeEdges(time_t *beginTime, time_t *endTime, unsigned char *beginTimeFract, unsigned char *endTimeFract,int globalIterator);
-//    void on_nextTimeSegment_clicked();
-    void getTimeTimerTick();
+
     void createCellVector();            // creating table widget cell begin and end times X=begin Y=end
-
-
-//    void setVideoTime();
-
 
     void on_action_triggered();
 
-    void on_previousTimeSegment_clicked();
-
-    void on_horizontalSlider_valueChanged(int value);
-
     void on_action_4_triggered();
 
-    void on_comboBox_2_currentIndexChanged(int index);
-
-    void on_comboBox_currentIndexChanged(int index);
-
-    void on_horizontalSlider_sliderMoved(int position);
-
-    void on_frameBackwardButton_clicked();
-
     void on_nextFrameButton_clicked();
-
-    void on_spinBox_2_valueChanged(int arg1);
 
     void on_spinBox_valueChanged(int arg1);
 
     void on_pushButton_2_clicked();
 
     void on_comboBox_activated(const QString &arg1);
-
-    void on_horizontalSlider_sliderReleased();
 
     void on_horizontalSlider_sliderPressed();
     void on_timeEdit_timeChanged(const QTime &time);
@@ -605,7 +446,6 @@ private slots:
 
     void on_hideSummary_clicked();
 
-//    void on_nextTimeSegment_clicked();
 
 protected:
     void paintEvent(QPaintEvent *);

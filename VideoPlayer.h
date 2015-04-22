@@ -62,7 +62,6 @@ public:
     QString getCurrentMediaLocation();
     ~VideoPlayer();
 
-
 private:
     VlcWidgetVideo *video;
     VlcMediaPlayer *_player;
@@ -72,22 +71,9 @@ private:
     VlcInstance *_audioinstance;
     VlcMedia *_audio;
     VlcMediaPlayer *_audioplayer;
-
-//    VlcMedia *_media_2;
-
     int volume = 100;
-
-//    void openUrl();
-
-//    Ui::DemoPlayer *ui;
-
-
 };
-//variables
 
-
-
-//functions
 
 
 
